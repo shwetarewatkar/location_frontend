@@ -341,7 +341,8 @@ export default class Groups extends React.Component {
         console.log("flage for open model:- ", this.state.disdetail);
 
         var data = {
-            uid: id
+            uid: id,
+            gid: this.state.gid
         }
 
         this.setState({
@@ -350,44 +351,62 @@ export default class Groups extends React.Component {
 
         console.log("req for latlong data:- ", data);
 
-        this.services.senddata('userDetails', data);
-        this.services.getdata().subscribe((res) => {
-            switch (res.event) {
-                case 'userDetails':
 
-                    console.log("response data:- ", res.data);
+        this.services.senddata('getHistory', data);
+        this.services.getdata().subscribe(async (res) => {
+            switch (res.event) {
+                case 'getHistory':
+
+                    console.log("get all location:- ", res.data);
 
                     this.setState({
                         userupdatedata: res.data
-                    })
-                    let userArray = []
-                    for (var i = 0; i < res.data.length; i++) {
-                        let decryptedData_lat = res.data[i].latitude;
-                        var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-                        var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8))
-
-                        let decryptedData_long = res.data[i].longitude;
-                        var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-                        var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
-
-                        var timestamp = res.data[i].cd;
-                        let obj = {
-                            lat: parseFloat(lat).toFixed(4),
-                            long: parseFloat(long).toFixed(4),
-                            cd: timestamp
-                        }
-                        userArray.push(obj)
-                    }
-
-                    this.setState({
-                        userupdatedata: userArray
                     });
 
-                    console.log("set array:- ", userArray);
+                    this.services.offsocket();
 
                     break;
             }
         });
+
+        // this.services.senddata('userDetails', data);
+        // this.services.getdata().subscribe((res) => {
+        //     switch (res.event) {
+        //         case 'userDetails':
+
+        //             console.log("response data:- ", res.data);
+
+        //             this.setState({
+        //                 userupdatedata: res.data
+        //             })
+        //             let userArray = []
+        //             for (var i = 0; i < res.data.length; i++) {
+        //                 let decryptedData_lat = res.data[i].latitude;
+        //                 var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
+        //                 var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8))
+
+        //                 let decryptedData_long = res.data[i].longitude;
+        //                 var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
+        //                 var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
+
+        //                 var timestamp = res.data[i].cd;
+        //                 let obj = {
+        //                     lat: parseFloat(lat).toFixed(4),
+        //                     long: parseFloat(long).toFixed(4),
+        //                     cd: timestamp
+        //                 }
+        //                 userArray.push(obj)
+        //             }
+
+        //             this.setState({
+        //                 userupdatedata: userArray
+        //             });
+
+        //             console.log("set array:- ", userArray);
+
+        //             break;
+        //     }
+        // });
 
     }
 
@@ -860,7 +879,7 @@ export default class Groups extends React.Component {
                                                                 <span>{obj.lat}</span>
                                                             </td>
                                                             <td>
-                                                                <span>{obj.long}</span>
+                                                                <span>{obj.lng}</span>
                                                             </td>
                                                             <td>
                                                                 <span>{moment(obj.cd).format('DD-MM-YYYY HH:mm:ss')}</span>
