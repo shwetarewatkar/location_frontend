@@ -163,7 +163,7 @@ export default class User extends React.Component {
                 this.handleLocationError(false, infoWindow, map.getCenter());
             }
 
-        }, 60000)
+        }, 30000)
 
     }
 
