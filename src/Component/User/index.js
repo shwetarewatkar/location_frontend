@@ -95,8 +95,6 @@ export default class User extends React.Component {
 
                     if (this.state.latitude == current_latchar) {
 
-
-
                         var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
                         localStorage.setItem("latitude", latitude.toString());
 
@@ -207,7 +205,7 @@ export default class User extends React.Component {
                 this.handleLocationError(false, infoWindow, map.getCenter());
             }
 
-        }, 30000)
+        }, 60000)
 
     }
 
