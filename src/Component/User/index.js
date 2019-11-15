@@ -94,6 +94,50 @@ export default class User extends React.Component {
                     console.log("current lat:- ", current_latchar);
 
                     if (this.state.latitude == current_latchar) {
+
+
+
+                        var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
+                        localStorage.setItem("latitude", latitude.toString());
+
+                        var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
+                        localStorage.setItem("longitude", longitude.toString());
+
+                        var data = {
+                            uid: userid,
+                            latitude: latitude.toString(),
+                            longitude: longitude.toString()
+                        }
+
+                        this.services.senddata('UpdateLocation', data);
+
+                        let decryptedData_email = localStorage.getItem('email');
+                        let decryptedData_username = localStorage.getItem('username');
+
+                        var bytes_email = CryptoJS.AES.decrypt(decryptedData_email.toString(), 'Location-Sharing');
+                        var email = JSON.parse(bytes_email.toString(CryptoJS.enc.Utf8));
+
+                        var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
+                        var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
+
+                        var newLocationData = {
+                            uid: userid,
+                            email: email,
+                            username: username,
+                            latitude: latitude.toString(),
+                            longitude: longitude.toString(),
+                            status: false,
+                            calloption: "no"
+                        }
+
+                        console.log("new location:- ", newLocationData);
+
+                        this.services.senddata('Auth', newLocationData);
+
+
+
+
+
                         // var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
                         // localStorage.setItem("latitude", latitude.toString());
 
