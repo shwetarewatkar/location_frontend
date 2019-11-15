@@ -9,7 +9,9 @@ import Service from '../../Services/service';
 import Auth from '../../Authantication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
+import $ from "jquery";
 
+// Declare globle variables to use this page
 
 var map, marker, infoWindow, bounds;
 var pos = []
@@ -22,9 +24,12 @@ var hostprofileurl = "https://ls.artoon.in/img/user.png";
 
 export default class User extends React.Component {
 
-    
+    // Declare constructor 
+
     constructor(props) {
         super(props);
+
+        // Declare state variables, methods and class objects for use this page
 
         this.services = new Service();
         this.auth = new Auth();
@@ -51,7 +56,9 @@ export default class User extends React.Component {
             sharetxtlink: '',
             gname: ''
         }
-        
+
+        // this interval set 10 minutes and trace current location of login user
+
         setInterval(() => {
 
             let decryptedData_uid = localStorage.getItem('uid');
@@ -86,7 +93,26 @@ export default class User extends React.Component {
                     console.log("current lat:- ", current_latchar);
 
                     if (this.state.latitude == current_latchar) {
-                        
+                        // var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
+                        // localStorage.setItem("latitude", latitude.toString());
+
+                        // var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
+                        // localStorage.setItem("longitude", longitude.toString());
+
+                        // var data = {
+                        //     uid: userid,
+                        //     latitude: latitude.toString(),
+                        //     longitude: longitude.toString(),
+                        //     plain_lat: position.coords.latitude.toString(),
+                        //     plain_long: position.coords.longitude.toString()
+                        // }
+
+                        // console.log("not event", data);
+
+                        // this.services.senddata('UpdateLocation', data);
+
+
+
                     } else {
 
                         var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
@@ -98,9 +124,7 @@ export default class User extends React.Component {
                         var data = {
                             uid: userid,
                             latitude: latitude.toString(),
-                            longitude: longitude.toString(),
-                            plain_lat: position.coords.latitude.toString(),
-                            plain_long: position.coords.longitude.toString()
+                            longitude: longitude.toString()
                         }
 
                         this.services.senddata('UpdateLocation', data);
@@ -125,15 +149,21 @@ export default class User extends React.Component {
                         }
 
                         console.log("new location:- ", newLocationData);
+
                         this.services.senddata('Auth', newLocationData);
+
                     }
+
+
                 }, (error) => {
                     console.log("Update Location error:- ", error)
                 })
             } else {
                 this.handleLocationError(false, infoWindow, map.getCenter());
             }
-        }, 60000)   
+
+        }, 30000)
+
     }
 
     // Declare componentDidMount method for mount some data and methods on load this page
@@ -293,6 +323,11 @@ export default class User extends React.Component {
         var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
         var linkuname = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
+        
+        let modify_name = linkuname.replace(' ', '_');
+        // console.log("username:- ", modify_name);
+
+
         userGroupids = "";
 
         this.services.senddata('GetGroupsList', '');
@@ -309,7 +344,7 @@ export default class User extends React.Component {
                             this.setState({
                                 gid: item._id,
                                 gname: item.groupname,
-                                sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + linkuname + '&sid=' + this.state.uid
+                                sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid
                             })
 
                             userGroupids = item.members;
@@ -415,12 +450,14 @@ export default class User extends React.Component {
         var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
         var linkuname = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
+        let modify_name = linkuname.replace(' ', '_');
+
         var gdata = this.state.groups;
         gdata.forEach((item, i) => {
             if (item._id == e.target.value) {
                 this.setState({
                     gname: item.groupname,
-                    sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + linkuname + '&sid=' + this.state.uid
+                    sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid
                 })
             }
         });
@@ -745,7 +782,7 @@ export default class User extends React.Component {
                                                         <div className="input-group-append">
                                                             <button className="btn btn-success" type="button" onClick={this.copyToClipboard.bind(this, this.state.sharelink)}>
                                                                 Copy Link
-                                                                </button>
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
