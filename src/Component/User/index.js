@@ -54,7 +54,8 @@ export default class User extends React.Component {
             longitude: '',
             gid: '',
             sharetxtlink: '',
-            gname: ''
+            gname: '',
+            gfullname: ''
         }
 
         // this interval set 10 minutes and trace current location of login user
@@ -206,6 +207,7 @@ export default class User extends React.Component {
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'GroupList':
+
                     this.setState({
                         groups: res.data
                     })
@@ -323,7 +325,7 @@ export default class User extends React.Component {
         var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
         var linkuname = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
-        
+
         let modify_name = linkuname.replace(' ', '_');
         // console.log("username:- ", modify_name);
 
@@ -344,7 +346,8 @@ export default class User extends React.Component {
                             this.setState({
                                 gid: item._id,
                                 gname: item.groupname,
-                                sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid
+                                sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid,
+                                gfullname: groupfullname
                             })
 
                             userGroupids = item.members;
@@ -830,8 +833,9 @@ export default class User extends React.Component {
                                                                     {
                                                                         this.state.groups ?
                                                                             this.state.groups.map(function (obj, i) {
+
                                                                                 return (
-                                                                                    <option value={obj._id} key={i}>{obj.groupname}</option>
+                                                                                    <option value={obj._id} key={i} selected={this.state.gfullname == obj.groupname ? 'selected' : ''}>{obj.groupname}</option>
                                                                                 )
                                                                             }, this)
                                                                             : ''

@@ -10,12 +10,13 @@ import Auth from '../../Authantication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
+import { async } from 'q';
 
 // Declare globle variables to use this page
 
 var map, marker, infoWindow, bounds, flightPath;
-var pos = []
-var markers = [];
+var pos = [];
+var lineData = [];
 
 export default class Groups extends React.Component {
 
@@ -347,7 +348,7 @@ export default class Groups extends React.Component {
             userupdatedata: []
         });
 
-        console.log("req for latlong data:- " , data);
+        console.log("req for latlong data:- ", data);
 
         this.services.senddata('userDetails', data);
         this.services.getdata().subscribe((res) => {
@@ -530,7 +531,7 @@ export default class Groups extends React.Component {
         }
     }
 
-    gethistory(uid) {
+    gethistory = (uid) => {
 
         this.setState({
             showmap: true
@@ -546,19 +547,20 @@ export default class Groups extends React.Component {
 
         console.log("send req for get history:- ", data);
 
-        for (var i = 0; i < markers.length; i++) {
-            markers[i].setMap(null);
-        }
+
+        // for (var i = 0; i < markers.length; i++) {
+        //     console.log("markers:- ", markers); 
+        //     markers[i].setMap(null);
+        // }
 
         this.services.senddata('getHistory', data);
-        this.services.getdata().subscribe((res) => {
+        this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
                 case 'getHistory':
 
                     console.log("get all location:- ", res.data);
 
                     var lendata = res.data.length;
-
 
                     // res.data.forEach((e, i) => {
 
@@ -572,7 +574,6 @@ export default class Groups extends React.Component {
                     // });
 
 
-
                     flightPath = new window.google.maps.Polyline({
                         path: res.data,
                         geodesic: true,
@@ -581,13 +582,23 @@ export default class Groups extends React.Component {
                         strokeWeight: 2
                     });
 
-                    if (lendata == 0 || lendata == 1) {
-                        if (markers.length != 0) {
-                            markers.setMap(null);
+                    if (lineData.length === 0) {
+                        if (lendata == 0 || lendata == 1) {
+                            await lineData.setMap(null);
+                        } else {
+                            lineData = flightPath;
+                            console.log("lineData:- ", lineData);
+                            lineData.setMap(map);
                         }
                     } else {
-                        markers = flightPath;
-                        markers.setMap(map);
+                        if (lendata == 0 || lendata == 1) {
+                            await lineData.setMap(null);
+                        } else {
+                            await lineData.setMap(null);
+                            lineData = flightPath;
+                            console.log("lineData:- ", lineData);
+                            lineData.setMap(map);
+                        }
                     }
 
                     this.services.offsocket();
@@ -822,7 +833,7 @@ export default class Groups extends React.Component {
                 <div className={(this.state.disdetail) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmember" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
 
-                        <div className="modal-content">
+                        <div className="modal-content" style={{ maxHeight: '95vh', overflow: 'auto' }}>
                             <form onSubmit={this.onSubmit}>
                                 <div className="modal-header">
                                     <h5 className="modal-title" id="exampleModalCenterTitle">Members Details</h5>
