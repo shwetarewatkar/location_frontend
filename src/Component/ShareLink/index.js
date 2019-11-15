@@ -17,6 +17,7 @@ export default class Sharelink extends React.Component {
     constructor(props) {
         super(props);
 
+
         this.services = new Service();
         this.auth = new Auth();
 
@@ -28,6 +29,7 @@ export default class Sharelink extends React.Component {
             uname: '',
             suid: ''
         }
+
     }
 
     // Declare componentDidMount method for mount some data and methods on load this page
@@ -38,11 +40,14 @@ export default class Sharelink extends React.Component {
         this.auth.reconnection();
 
         let params = (new URL(document.location)).searchParams;
-        var puname = params.get('name');
+        var modify_name = params.get('name');
+        let puname = modify_name.replace('_', ' ');
+
+
 
         this.setState({
             gid: params.get('id'),
-            uname: params.get('name'),
+            uname: puname,
             suid: params.get('sid')
         })
 
@@ -54,7 +59,7 @@ export default class Sharelink extends React.Component {
             if (username == puname) {
                 this.props.history.push('/');
             } else {
-                console.log("different");
+                console.log("differ");
             }
         } else {
             this.props.history.push('/');
@@ -63,6 +68,7 @@ export default class Sharelink extends React.Component {
     }
 
     onAddInGroup() {
+
         let decryptedData_invitecode = localStorage.getItem('invitecode');
         var bytes_invitecode = CryptoJS.AES.decrypt(decryptedData_invitecode.toString(), 'Location-Sharing');
         var invitcode = JSON.parse(bytes_invitecode.toString(CryptoJS.enc.Utf8));
@@ -74,16 +80,20 @@ export default class Sharelink extends React.Component {
         };
 
         this.services.senddata('AddMember', data);
-        alertify.success("Joined successfully");
+        alertify.success("Join successfully");
         this.props.history.push('/user');
+        
     }
 
     onRejectGroup = () => {
         this.props.history.push('/user');
     }
 
+
     render() {
+
         return (
+
             <div className="container-fluid">
                 <div className="row">
                     <div className="col-xl-4"></div>
@@ -93,7 +103,7 @@ export default class Sharelink extends React.Component {
                             <form>
                                 <div className="modal-body">
                                     <p style={{ fontSize: '20px', textAlign: 'center' }}>
-                                        {this.state.uname} sent you invite to join '{this.state.uname}' group?
+                                        {this.state.uname} send you invite to join '{this.state.uname}' group?
                                     </p>
                                 </div>
                                 <div style={{ padding: '10px', textAlign: 'center' }}>
@@ -102,11 +112,14 @@ export default class Sharelink extends React.Component {
                                     <button type="button" onClick={this.onRejectGroup} className="btn btn-danger" >Reject</button>
                                 </div>
                             </form>
+
                         </div>
                     </div>
                     <div className="col-xl-4"></div>
                 </div>
             </div>
+
         );
     }
+
 }
