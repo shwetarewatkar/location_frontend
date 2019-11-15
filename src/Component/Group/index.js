@@ -1,3 +1,5 @@
+// Import require modules
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../Common/Sidebar';
@@ -9,15 +11,21 @@ import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
 
+// Declare globle variables to use this page
+
 var map, marker, infoWindow, bounds, flightPath;
 var pos = []
 var markers = [];
 
 export default class Groups extends React.Component {
 
+    // Declare constructor 
+
     constructor(props) {
         super(props);
-        
+
+        // Declare state variables, methods and class objects for use this page
+
         this.state = {
             groups: [],
             members: [],
@@ -61,6 +69,8 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare componentDidMount method for mount some data and methods on load this page
+
     componentDidMount() {
         this.auth.authantication();
         this.auth.reconnection();
@@ -74,7 +84,10 @@ export default class Groups extends React.Component {
         }, 1000)
     }
 
+    // Declare getAllGroups method for get all group of user
+
     getAllGroups() {
+
         let decryptedData_uid = localStorage.getItem('uid');
         var bytes_uid = CryptoJS.AES.decrypt(decryptedData_uid.toString(), 'Location-Sharing');
         var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
@@ -96,11 +109,15 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare onChange event for set value of invitecode
+
     onChangeInviteCode(e) {
         this.setState({
             invitecode: e.target.value
         });
     }
+
+    // Declare onChange event for set value of sharelink
 
     onChangeShareTxtLink(e) {
         this.setState({
@@ -108,11 +125,15 @@ export default class Groups extends React.Component {
         });
     }
 
+    // Declare onChange event for set value of groupname
+
     onChangeGroupName(e) {
         this.setState({
             groupname: e.target.value
         });
     }
+
+    // Declare onJoinSubmit method for add user to our group
 
     onJoinSubmit(e) {
         e.preventDefault();
@@ -153,7 +174,7 @@ export default class Groups extends React.Component {
                             alertify.error(res.data.error);
                             this.services.offsocket();
                         } else {
-                            alertify.success("Joined successfully");
+                            alertify.success("Join successfully");
                             this.services.offsocket();
                         }
 
@@ -165,16 +186,18 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare onGroupSubmit method for add new group
+
     onGroupSubmit(e) {
         e.preventDefault();
 
         let decryptedData_lat = localStorage.getItem('latitude');
-        var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-        var get_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
+        // var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
+        // var get_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
 
         let decryptedData_long = localStorage.getItem('longitude');
-        var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-        var get_long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
+        // var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
+        // var get_long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
 
         if (this.state.groupname == '') {
             this.setState({
@@ -193,8 +216,8 @@ export default class Groups extends React.Component {
             var data = {
                 uid: this.state.uid,
                 GroupName: this.state.groupname,
-                plain_lat: get_lat,
-                plain_long: get_long,
+                plain_lat: decryptedData_lat,
+                plain_long: decryptedData_long,
             }
 
             this.services.senddata('AddGroup', data);
@@ -206,15 +229,23 @@ export default class Groups extends React.Component {
             alertify.success("Add Successfully");
         }
 
+
     }
 
+    // Declare delgroupdata method for open confirmation model to delete group
+
     delgroupdata(id) {
+
         this.setState({
             gid: id,
             groupdeletemodelshow: true
         })
+
         this.state.groupdeletemodelshow = true;
+
     }
+
+    // Declare onDeleteSubmit method for delete group
 
     onDeleteSubmit(e) {
 
@@ -235,7 +266,8 @@ export default class Groups extends React.Component {
 
     }
 
-    
+    // Declare getgroupdata method for add member in group on model
+
     getgroupdata(id, name) {
         this.setState({
             gid: id,
@@ -244,7 +276,10 @@ export default class Groups extends React.Component {
         })
 
         this.state.groupmodelshow = true;
+        console.log("flage for open popup:- ", this.state.groupmodelshow);
     }
+
+    // Declare getsharelink method for invite this group for add user
 
     getsharelink(id, name) {
 
@@ -252,15 +287,18 @@ export default class Groups extends React.Component {
         var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
         var username = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
+        let modify_name = username.replace(' ', '_');
+
         this.setState({
             gid: id,
             groupName: name,
             shoesharelinkmodel: true,
-            sharetxtlink: this.auth.services.shareDomail + '?id=' + id + '&name=' + username + '&sid=' + this.state.uid
+            sharetxtlink: this.auth.services.shareDomail + '?id=' + id + '&name=' + modify_name + '&sid=' + this.state.uid
         })
         this.state.shoesharelinkmodel = true;
     }
 
+    // Declare onGetdata method for list member of group on model
 
     onGetdata(id, name) {
 
@@ -290,6 +328,7 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare getdetail method for get details of lat, long of member on model
 
     getdetail(id) {
 
@@ -298,6 +337,7 @@ export default class Groups extends React.Component {
         })
         this.state.disdetail = true;
 
+        console.log("flage for open model:- ", this.state.disdetail);
 
         var data = {
             uid: id
@@ -307,10 +347,14 @@ export default class Groups extends React.Component {
             userupdatedata: []
         });
 
+        console.log("req for latlong data:- " , data);
+
         this.services.senddata('userDetails', data);
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'userDetails':
+
+                    console.log("response data:- ", res.data);
 
                     this.setState({
                         userupdatedata: res.data
@@ -338,10 +382,15 @@ export default class Groups extends React.Component {
                         userupdatedata: userArray
                     });
 
+                    console.log("set array:- ", userArray);
+
                     break;
             }
         });
+
     }
+
+    // Declare onRemoveMember method for open confirmation model of remove member
 
     onRemoveMember(rmid) {
 
@@ -356,6 +405,8 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare onRemoveDeleteSubmit method for remove member from group
+
     onRemoveDeleteSubmit(e) {
         e.preventDefault();
 
@@ -369,7 +420,7 @@ export default class Groups extends React.Component {
 
         this.services.senddata('RemoveMember', data);
         this.state.removegroupmodelshow = false;
-        alertify.success("Removed Successfully");
+        alertify.success("Remove Successfully");
 
         // this.services.getdata().subscribe((res) => {
         //     switch (res.event) {
@@ -384,13 +435,16 @@ export default class Groups extends React.Component {
 
     }
 
-    
+    // Declare onAddNewGroup method for open model of add new group
+
     onAddNewGroup() {
         this.setState({
             addnewgroupmodelshow: true
         })
         this.state.addnewgroupmodelshow = true;
     }
+
+    // Declare onCloseModel method for close all model
 
     onCloseModel() {
         this.setState({
@@ -411,6 +465,8 @@ export default class Groups extends React.Component {
         this.state.shoesharelinkmodel = false;
     }
 
+    // Declare onCloseMemberModel method for close member model 
+
     onCloseMemberModel() {
         this.setState({
             disdetail: false
@@ -418,13 +474,16 @@ export default class Groups extends React.Component {
         this.state.disdetail = false;
     }
 
-    
+    // Declare onCloseMemberHistory method for close member model 
+
     onCloseMemberHistory() {
         this.setState({
             showmap: false
         })
         this.state.showmap = false;
     }
+
+    // Declare copyToClipboard method for copy share link click on button
 
     copyToClipboard(link) {
 
@@ -438,6 +497,8 @@ export default class Groups extends React.Component {
 
     }
 
+    // Declare handleLocationError method for when any kid of location related error is occur at that time that method handled current location
+
     handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
         infoWindow.setContent(browserHasGeolocation ?
@@ -445,6 +506,8 @@ export default class Groups extends React.Component {
             'Error: Your browser doesn\'t support geolocation.');
         infoWindow.open(map);
     }
+
+    // Declare getAllLocations method for set and render map by default when intialize current page
 
     getAllLocations() {
 
@@ -474,9 +537,14 @@ export default class Groups extends React.Component {
         });
         this.state.showmap = true;
 
+        console.log("flag for open model:- ", this.state.showmap);
+
         var data = {
-            uid: uid
+            uid: uid,
+            gid: this.state.gid
         };
+
+        console.log("send req for get history:- ", data);
 
         for (var i = 0; i < markers.length; i++) {
             markers[i].setMap(null);
@@ -540,8 +608,11 @@ export default class Groups extends React.Component {
                 <Sidebar />
                 <div id="content-wrapper" className="d-flex flex-column">
                     <div id="content">
+
                         <Navigation />
+
                         <div className="container-fluid">
+
                             <div className="row">
                                 <div className="col-xl-12">
                                     <div className="card shadow mb-4">
@@ -551,11 +622,7 @@ export default class Groups extends React.Component {
                                         <div className="card-body">
                                             <div className="table-responsive">
                                                 <div>
-                                                    <button type="button" className="btn btn-primary" 
-                                                        onClick={this.onAddNewGroup}>
-                                                        <i className="fas fa-plus"></i> 
-                                                    Add New
-                                                    </button>
+                                                    <button type="button" className="btn btn-primary" onClick={this.onAddNewGroup}><i className="fas fa-plus"></i> Add New</button>
                                                 </div>
                                                 <br />
                                                 <table className="table table-bordered" id="dataTable" width="100%" cellSpacing="0">
@@ -566,34 +633,25 @@ export default class Groups extends React.Component {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
+
                                                         {
                                                             this.state.groups.map(function (obj, i) {
                                                                 return (
                                                                     <tr key={i}>
                                                                         <td>
-                                                                            <span className="btn-hover myspan" onClick={this.onGetdata.bind(this, obj._id, obj.groupname)}>
-                                                                                {obj.groupname}
-                                                                            </span>
+                                                                            <span className="btn-hover myspan" onClick={this.onGetdata.bind(this, obj._id, obj.groupname)}>{obj.groupname}</span>
                                                                         </td>
                                                                         <td>
                                                                             <div className="res-action">
-                                                                                {/* <span className="btn btn-primary btn-hover" onClick={this.getgroupdata.bind(this, obj._id, obj.groupname)} title="Add New Group"><i className="fas fa-plus"></i></span> */}
+                                                                                <span className="btn btn-primary btn-hover" onClick={this.getgroupdata.bind(this, obj._id, obj.groupname)} title="Add New Group"><i className="fas fa-plus"></i></span>
                                                                                 &nbsp;&nbsp;
-                                                                                <span className="btn btn-success btn-hover" 
-                                                                                    onClick={this.getsharelink.bind(this, obj._id, obj.groupname)} 
-                                                                                    title="Share Link">
-                                                                                    <i className="fas fa-share"></i>
-                                                                                </span>
+                                                                                <span className="btn btn-success btn-hover" onClick={this.getsharelink.bind(this, obj._id, obj.groupname)} title="Share Link"><i className="fas fa-share"></i></span>
                                                                                 &nbsp;&nbsp;
                                                                                 {
                                                                                     (obj.default == true) ?
                                                                                         ''
                                                                                         :
-                                                                                        <span onClick={this.delgroupdata.bind(this, obj._id)} 
-                                                                                            className="btn btn-danger btn-hover" 
-                                                                                            title="Remove Group">
-                                                                                            <i className="fas fa-times"></i>
-                                                                                        </span>
+                                                                                        <span onClick={this.delgroupdata.bind(this, obj._id)} className="btn btn-danger btn-hover" title="Remove Group"><i className="fas fa-times"></i></span>
                                                                                 }
                                                                             </div>
                                                                         </td>
@@ -723,13 +781,17 @@ export default class Groups extends React.Component {
                                                     <div className="col-xl-4 col-4 text-right" style={{ paddingRight: '13px', paddingLeft: '0px' }}>
                                                         {
                                                             (obj.uid == this.state.uid) ?
-                                                                <span className="btn btn-primary btn-hover" style={{ padding: '6px', paddingRight: '10px', paddingLeft: '10px' }} onClick={this.gethistory.bind(this, obj.uid)} title="Location History"><i className="fas fa-history"></i></span> :
+                                                                <span className="btn btn-primary btn-hover" style={{ padding: '6px', paddingRight: '10px', paddingLeft: '10px' }} onClick={this.gethistory.bind(this, obj.uid)} title="Location History">
+                                                                    <i className="fas fa-history"></i>
+                                                                </span> :
                                                                 <div>
                                                                     <span onClick={this.onRemoveMember.bind(this, obj.uid)} className="btn btn-danger btn-hover">
                                                                         <i className="fas fa-times"></i>
                                                                     </span>
                                                                     &nbsp;&nbsp;
-                                                                    <span className="btn btn-primary btn-hover" style={{ padding: '6px', paddingRight: '10px', paddingLeft: '10px' }} onClick={this.gethistory.bind(this, obj.uid)} title="Location History"><i className="fas fa-history"></i></span>
+                                                                    <span className="btn btn-primary btn-hover" style={{ padding: '6px', paddingRight: '10px', paddingLeft: '10px' }} onClick={this.gethistory.bind(this, obj.uid)} title="Location History">
+                                                                        <i className="fas fa-history"></i>
+                                                                    </span>
                                                                 </div>
 
                                                         }
@@ -755,7 +817,7 @@ export default class Groups extends React.Component {
 
                 {/* END */}
 
-                {/* open model for member details
+                {/* open model for member details */}
 
                 <div className={(this.state.disdetail) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmember" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
@@ -808,10 +870,10 @@ export default class Groups extends React.Component {
                         </div>
 
                     </div>
-                </div> */}
-                {/* {
+                </div>
+                {
                     (this.state.disdetail) ? <div className="modal-backdrop fade show"></div> : ''
-                } */}
+                }
 
                 {/* END */}
 
