@@ -101,6 +101,7 @@ export default class Groups extends React.Component {
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'GroupList':
+
                     this.setState({
                         groups: res.data
                     })
@@ -282,7 +283,7 @@ export default class Groups extends React.Component {
 
     // Declare getsharelink method for invite this group for add user
 
-    getsharelink(id, name) {
+    getsharelink(id, name, shareid) {
 
         let decryptedData_name = localStorage.getItem('username');
         var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
@@ -294,7 +295,7 @@ export default class Groups extends React.Component {
             gid: id,
             groupName: name,
             shoesharelinkmodel: true,
-            sharetxtlink: this.auth.services.shareDomail + '?id=' + id + '&name=' + modify_name + '&sid=' + this.state.uid
+            sharetxtlink: this.auth.services.shareDomail + '?shareid=' + shareid + '&name=' + modify_name
         })
         this.state.shoesharelinkmodel = true;
     }
@@ -356,11 +357,12 @@ export default class Groups extends React.Component {
         this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
                 case 'getHistory':
+                    var finaldata = this.removeDuplicates(res.data, 'lat');
 
-                    console.log("get all location:- ", res.data);
+                    console.log("get all location:- ", finaldata);
 
                     this.setState({
-                        userupdatedata: res.data
+                        userupdatedata: finaldata
                     });
 
                     this.services.offsocket();
@@ -566,12 +568,6 @@ export default class Groups extends React.Component {
 
         console.log("send req for get history:- ", data);
 
-
-        // for (var i = 0; i < markers.length; i++) {
-        //     console.log("markers:- ", markers); 
-        //     markers[i].setMap(null);
-        // }
-
         this.services.senddata('getHistory', data);
         this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
@@ -579,22 +575,14 @@ export default class Groups extends React.Component {
 
                     console.log("get all location:- ", res.data);
 
+                    var finaldata = this.removeDuplicates(res.data, 'lat');
+
+                    // console.log("newdata:- ", this.removeDuplicates(finaldata, 'lng'));
+
                     var lendata = res.data.length;
 
-                    // res.data.forEach((e, i) => {
-
-                    //     var uluru = { lat: parseFloat(e.lat), lng: parseFloat(e.lng) };
-                    //     marker = new window.google.maps.Marker({
-                    //         position: uluru,
-                    //         map: map,
-                    //     })
-
-                    //     markers.push(marker);
-                    // });
-
-
                     flightPath = new window.google.maps.Polyline({
-                        path: res.data,
+                        path: finaldata,
                         geodesic: true,
                         strokeColor: '#FF0000',
                         strokeOpacity: 1.0,
@@ -603,7 +591,8 @@ export default class Groups extends React.Component {
 
                     if (lineData.length === 0) {
                         if (lendata == 0 || lendata == 1) {
-                            await lineData.setMap(null);
+                            lineData = [];
+                            // await lineData.setMap(null);
                         } else {
                             lineData = flightPath;
                             console.log("lineData:- ", lineData);
@@ -627,6 +616,15 @@ export default class Groups extends React.Component {
         });
 
     }
+
+    removeDuplicates(array, key) {
+        return array.filter((obj, index, self) =>
+            index === self.findIndex((el) => (
+                el[key] === obj[key]
+            ))
+        )
+    }
+
 
     // Render HTML page and return it
 
@@ -675,7 +673,7 @@ export default class Groups extends React.Component {
                                                                             <div className="res-action">
                                                                                 <span className="btn btn-primary btn-hover" onClick={this.getgroupdata.bind(this, obj._id, obj.groupname)} title="Add New Group"><i className="fas fa-plus"></i></span>
                                                                                 &nbsp;&nbsp;
-                                                                                <span className="btn btn-success btn-hover" onClick={this.getsharelink.bind(this, obj._id, obj.groupname)} title="Share Link"><i className="fas fa-share"></i></span>
+                                                                                <span className="btn btn-success btn-hover" onClick={this.getsharelink.bind(this, obj._id, obj.groupname, obj.shareid)} title="Share Link"><i className="fas fa-share"></i></span>
                                                                                 &nbsp;&nbsp;
                                                                                 {
                                                                                     (obj.default == true) ?

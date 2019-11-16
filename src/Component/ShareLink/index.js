@@ -44,26 +44,42 @@ export default class Sharelink extends React.Component {
         let puname = modify_name.replace('_', ' ');
 
 
-
-        this.setState({
-            gid: params.get('id'),
-            uname: puname,
-            suid: params.get('sid')
-        })
-
-        let decryptedData_username = localStorage.getItem('username');
-        if (decryptedData_username) {
-            var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
-            var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
-
-            if (username == puname) {
-                this.props.history.push('/');
-            } else {
-                console.log("differ");
-            }
-        } else {
-            this.props.history.push('/');
+        var sdata = {
+            shareid: params.get('shareid')
         }
+
+        this.services.senddata('getGroupData', sdata);
+        this.services.getdata().subscribe(async (res) => {
+            switch (res.event) {
+                case 'getGroupData':
+
+                    console.log("get all group data:- ", res.data);
+
+                    this.setState({
+                        gid: res.data[0]._id,
+                        uname: puname,
+                        suid: res.data[0].uid
+                    })
+
+                    let decryptedData_username = localStorage.getItem('username');
+                    if (decryptedData_username) {
+                        var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
+                        var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
+
+                        if (username == puname) {
+                            this.props.history.push('/');
+                        } else {
+                            console.log("differ");
+                        }
+                    } else {
+                        this.props.history.push('/');
+                    }
+
+                    break;
+            }
+        });
+
+
 
     }
 
@@ -82,7 +98,7 @@ export default class Sharelink extends React.Component {
         this.services.senddata('AddMember', data);
         alertify.success("Join successfully");
         this.props.history.push('/user');
-        
+
     }
 
     onRejectGroup = () => {

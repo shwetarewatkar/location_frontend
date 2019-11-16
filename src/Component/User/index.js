@@ -388,7 +388,7 @@ export default class User extends React.Component {
                             this.setState({
                                 gid: item._id,
                                 gname: item.groupname,
-                                sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid,
+                                sharetxtlink: this.auth.services.shareDomail + '?shareid=' + item.shareid + '&name=' + modify_name,
                                 gfullname: groupfullname
                             })
 
@@ -502,7 +502,7 @@ export default class User extends React.Component {
             if (item._id == e.target.value) {
                 this.setState({
                     gname: item.groupname,
-                    sharetxtlink: this.auth.services.shareDomail + '?id=' + item._id + '&name=' + modify_name + '&sid=' + this.state.uid
+                    sharetxtlink: this.auth.services.shareDomail + '?shareid=' + item.shareid + '&name=' + modify_name
                 })
             }
         });
