@@ -63,9 +63,9 @@ export default class Setting extends React.Component {
             firebase.initializeApp(config);
         }
 
-        let decryptedData_flage = localStorage.getItem('flage');
+        let encrypted_flag = localStorage.getItem('flag');
 
-        if (decryptedData_flage) {
+        if (encrypted_flag) {
             this.setState({
                 showforgot: true
             })

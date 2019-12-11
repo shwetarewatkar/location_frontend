@@ -1,12 +1,8 @@
-// Import require modules
-
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import firebase from 'firebase';
 import Service from '../Services/service';
 import alertify from 'alertifyjs';
-import CryptoJS from 'crypto-js';
-
 
 export default class Forgot extends Component {
 
@@ -26,13 +22,6 @@ export default class Forgot extends Component {
             erremail: true
         }
 
-        var config = {
-            // apiKey: "AIzaSyBLE5yO7ozj753lTC22A94OuTsLYvZGnpE",
-            // authDomain: "location-sharing-31142.firebaseapp.com",
-            // databaseURL: "https://location-sharing-31142.firebaseio.com",
-            // projectId: "location-sharing-31142",
-            // storageBucket: "gs://location-sharing-31142.appspot.com/"
-        };
 
         var config = {
             apiKey: "AIzaSyAmMZ1vHju7_xZwAwdXpb8NZWB4dyqInbI",
@@ -71,6 +60,7 @@ export default class Forgot extends Component {
         localStorage.removeItem("invitecode");
         localStorage.removeItem("latitude");
         localStorage.removeItem("longitude");
+        localStorage.removeItem("gkeys");
     }
 
     // Declare onSubmit method for send mail confirmation and change password link
@@ -78,19 +68,19 @@ export default class Forgot extends Component {
     onSubmit(e) {
         e.preventDefault();
 
-        if (this.state.email == '') {
+        if (this.state.email === '') {
             this.setState({
                 erremail: false
             });
-            this.state.erremail = false;
+            // this.state.erremail = false;
         } else {
             this.setState({
                 erremail: true
             });
-            this.state.erremail = true;
+            // this.state.erremail = true;
         }
 
-        if (this.state.erremail == true) {
+        if (this.state.erremail === true) {
 
             var data = {
                 uid: "",
@@ -119,6 +109,8 @@ export default class Forgot extends Component {
                             this.services.offsocket();
                         }
 
+                        break;
+                    default:
                         break;
                 }
             });

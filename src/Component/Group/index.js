@@ -10,7 +10,6 @@ import Auth from '../../Authantication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
-import { async } from 'q';
 
 // Declare globle variables to use this page
 
@@ -193,11 +192,11 @@ export default class Groups extends React.Component {
     onGroupSubmit(e) {
         e.preventDefault();
 
-        let decryptedData_lat = localStorage.getItem('latitude');
+        let encrypted_lat = localStorage.getItem('latitude');
         // var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
         // var get_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
 
-        let decryptedData_long = localStorage.getItem('longitude');
+        let encrypted_long = localStorage.getItem('longitude');
         // var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
         // var get_long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
 
@@ -218,8 +217,8 @@ export default class Groups extends React.Component {
             var data = {
                 uid: this.state.uid,
                 GroupName: this.state.groupname,
-                plain_lat: decryptedData_lat,
-                plain_long: decryptedData_long,
+                latitude: encrypted_lat,
+                longitude: encrypted_long,
             }
 
             this.services.senddata('AddGroup', data);
@@ -229,6 +228,25 @@ export default class Groups extends React.Component {
             })
             this.addnewgroupmodelshow = false;
             alertify.success("Add Successfully");
+
+            let encrypted_uid = localStorage.getItem('uid');
+            var getGroupKeyData = {
+                uid: encrypted_uid.toString()
+            }
+            this.services.senddata('getGroupKeys', getGroupKeyData);
+            this.services.getdata().subscribe((res) =>{
+                switch (res.event) {
+                    case 'getGroupKeysResponse':
+                        console.log("getGroupkey",res.data);
+                        if(res.data){
+                            console.log("grpKey_info",res.data);
+                            localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
+                        }
+                        break; 
+                    default:
+                        break;
+                }
+            });
         }
 
 

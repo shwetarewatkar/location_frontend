@@ -57,9 +57,9 @@ export default class Navigation extends React.Component {
                             &nbsp;&nbsp;
                             {
                                 (this.state.profile) ?
-                                    <img className="img-profile rounded-circle" src={this.state.profile} />
+                                    <img className="img-profile rounded-circle" src={this.state.profile} alt="user_profile" />
                                     :
-                                    <img className="img-profile rounded-circle" src="img/user.png" />
+                                    <img className="img-profile rounded-circle" src="img/user.png" alt="user_profile"/>
                             }
                         </Link>
                     </li>

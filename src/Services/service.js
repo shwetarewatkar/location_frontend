@@ -1,27 +1,27 @@
 // Import require modules
 
-import React, { Component } from 'react';
+import { Component } from 'react';
 import axios from 'axios';
 import socketIOClient from "socket.io-client";
-import CryptoJS from 'crypto-js';
-import { Observable, Observer } from 'rxjs';
+import { Observable} from 'rxjs';
 
 // Connection URL of socket server 
 
-// const socket = socketIOClient("http://localhost:3001");
-const socket = socketIOClient("https://ls.shwetarewatkar.com:3001");
+const socket = socketIOClient("http://localhost:3001");
+// const socket = socketIOClient("https://ls.shwetarewatkar.com:3001");
 
 export default class Service extends Component {
 
     // Connection URL of node server  
 
-    // apiURL = "http://localhost:3000";
-    apiURL = "https://ls.shwetarewatkar.com:3000";
+    apiURL = "http://localhost:3000";
+    // apiURL = "https://ls.shwetarewatkar.com:3000";
 
     // Globlly Declared invite link
-
-    domail = "https://ls.shwetarewatkar.com/invite?id=";
-    shareDomail = "https://ls.shwetarewatkar.com/sharelink";
+    domail = "http://localhost:3002/invite?id=";
+    // domail = "https://ls.shwetarewatkar.com/invite?id=";
+    // shareDomail = "https://ls.shwetarewatkar.com/sharelink";
+    shareDomail = "http://localhost:3002/sharelink";
 
     // Reconnection of socket server
 
@@ -37,7 +37,7 @@ export default class Service extends Component {
 
     // Node server api for registration
 
-    postdata(data) {
+    registrationApi(data) {
         return axios.post(`${this.apiURL}/location/add`, data);
     }
 

@@ -4,10 +4,9 @@ import Service from '../../Services/service';
 import CryptoJS from 'crypto-js';
 import history from '../../History';
 
-var setuser = false;
-var setpeople = false;
-var setgroup = false;
-var setsetting = false;
+let setuser = false;
+let setgroup = false;
+let setsetting = false;
 
 export default class Sidebar extends React.Component {
 
@@ -29,25 +28,16 @@ export default class Sidebar extends React.Component {
     componentDidMount() {
         this.updateViewState();
 
-        if (window.location.pathname == '/user') {
+        if (window.location.pathname === '/user') {
             setuser = true;
-            setpeople = false;
             setgroup = false;
             setsetting = false;
-        } else if (window.location.pathname == '/people') {
+        } else if (window.location.pathname === '/groups') {
             setuser = false;
-            setpeople = true;
-            setgroup = false;
-            setsetting = false;
-
-        } else if (window.location.pathname == '/groups') {
-            setuser = false;
-            setpeople = false;
             setgroup = true;
             setsetting = false;
-        } else if (window.location.pathname == '/setting') {
+        } else if (window.location.pathname === '/setting') {
             setuser = false;
-            setpeople = false;
             setgroup = false;
             setsetting = true;
         }
@@ -68,24 +58,16 @@ export default class Sidebar extends React.Component {
     }
     
     Class(path) {
-        if (path == 'user') {
+        if (path === 'user') {
             setuser = true;
-            setpeople = false;
             setgroup = false;
             setsetting = false;
-        } else if (path == 'people') {
+        } else if (path === 'groups') {
             setuser = false;
-            setpeople = true;
-            setgroup = false;
-            setsetting = false;
-        } else if (path == 'groups') {
-            setuser = false;
-            setpeople = false;
             setgroup = true;
             setsetting = false;
-        } else if (path == 'setting') {
+        } else if (path === 'setting') {
             setuser = false;
-            setpeople = false;
             setgroup = false;
             setsetting = true;
         }

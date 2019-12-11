@@ -1,7 +1,6 @@
 // Import require modules
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import Sidebar from '../Common/Sidebar';
 import Navigation from '../Common/Navigation';
 import Footer from '../Common/Footer';
@@ -9,7 +8,6 @@ import Service from '../../Services/service';
 import Auth from '../../Authantication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
-import $ from "jquery";
 
 // Declare globle variables to use this page
 
@@ -34,11 +32,10 @@ export default class User extends React.Component {
         this.services = new Service();
         this.auth = new Auth();
 
-        this.onChangeShareLink = this.onChangeShareLink.bind(this);
         this.onChangeGroup = this.onChangeGroup.bind(this);
-        this.onChangeInvite = this.onChangeInvite.bind(this);
-        this.onAddDefault = this.onAddDefault.bind(this);
         this.defaultLocData = this.defaultLocData.bind(this);
+        this.sendLocationData = this.sendLocationData.bind(this);
+
 
         this.state = {
             map: {},
@@ -62,21 +59,21 @@ export default class User extends React.Component {
 
         setInterval(() => {
 
-            let decryptedData_uid = localStorage.getItem('uid');
-            if (!decryptedData_uid) {
+            let encrypted_uid = localStorage.getItem('uid');
+            if (!encrypted_uid) {
                 return false;
             }
 
-            var bytes_uid = CryptoJS.AES.decrypt(decryptedData_uid.toString(), 'Location-Sharing');
+            var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
             var userid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
 
 
-            let decryptedData_latitude = localStorage.getItem('latitude');
-            var bytes_latitude = CryptoJS.AES.decrypt(decryptedData_latitude.toString(), 'Location-Sharing');
+            let encrypted_latitude = localStorage.getItem('latitude');
+            var bytes_latitude = CryptoJS.AES.decrypt(encrypted_latitude.toString(), 'Location-Sharing');
             var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
 
-            let decryptedData_longitude = localStorage.getItem('longitude');
-            var bytes_longitude = CryptoJS.AES.decrypt(decryptedData_longitude.toString(), 'Location-Sharing');
+            let encrypted_longitude = localStorage.getItem('longitude');
+            var bytes_longitude = CryptoJS.AES.decrypt(encrypted_longitude.toString(), 'Location-Sharing');
             var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
             const location = window.navigator && window.navigator.geolocation
@@ -94,47 +91,9 @@ export default class User extends React.Component {
                     console.log("current lat:- ", current_latchar);
 
                     if (this.state.latitude == current_latchar) {
-
-                        var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
-                        localStorage.setItem("latitude", latitude.toString());
-
-                        var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
-                        localStorage.setItem("longitude", longitude.toString());
-
-                        var data = {
-                            uid: userid,
-                            latitude: latitude.toString(),
-                            longitude: longitude.toString()
-                        }
-
-                        this.services.senddata('UpdateLocation', data);
-
-                        let decryptedData_email = localStorage.getItem('email');
-                        let decryptedData_username = localStorage.getItem('username');
-
-                        var bytes_email = CryptoJS.AES.decrypt(decryptedData_email.toString(), 'Location-Sharing');
-                        var email = JSON.parse(bytes_email.toString(CryptoJS.enc.Utf8));
-
-                        var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
-                        var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
-
-                        var newLocationData = {
-                            uid: userid,
-                            email: email,
-                            username: username,
-                            latitude: latitude.toString(),
-                            longitude: longitude.toString(),
-                            status: false,
-                            calloption: "no"
-                        }
-
-                        console.log("new location:- ", newLocationData);
-
-                        this.services.senddata('Auth', newLocationData);
-
-
-
-
+                        
+                        console.log("state_lat==cur_lat","->> No change",this.state.latitude,current_latchar);
+                        console.log("state_lng==cur_lng","->> No change",this.state.longitude,current_longchar);
 
                         // var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
                         // localStorage.setItem("latitude", latitude.toString());
@@ -145,18 +104,39 @@ export default class User extends React.Component {
                         // var data = {
                         //     uid: userid,
                         //     latitude: latitude.toString(),
-                        //     longitude: longitude.toString(),
-                        //     plain_lat: position.coords.latitude.toString(),
-                        //     plain_long: position.coords.longitude.toString()
+                        //     longitude: longitude.toString()
                         // }
-
-                        // console.log("not event", data);
 
                         // this.services.senddata('UpdateLocation', data);
 
+                        // let decryptedData_email = localStorage.getItem('email');
+                        // let decryptedData_username = localStorage.getItem('username');
 
+                        // var bytes_email = CryptoJS.AES.decrypt(decryptedData_email.toString(), 'Location-Sharing');
+                        // var email = JSON.parse(bytes_email.toString(CryptoJS.enc.Utf8));
+
+                        // var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
+                        // var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
+
+                        // var newLocationData = {
+                        //     uid: userid,
+                        //     email: email,
+                        //     username: username,
+                        //     latitude: latitude.toString(),
+                        //     longitude: longitude.toString(),
+                        //     status: false,
+                        //     calloption: "no"
+                        // }
+
+                        // console.log("new location:- ", newLocationData);
+
+                        // this.services.senddata('Auth', newLocationData);
 
                     } else {
+
+                        console.log("state_lat!=cur_lat"," -->> Change detected! Push new location to server.");
+                        console.log("state_lat!=cur_lat","->> change",this.state.latitude,latitude);
+                        console.log("state_lng!=cur_lng","->> change",this.state.longitude,longitude);
 
                         var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
                         localStorage.setItem("latitude", latitude.toString());
@@ -164,40 +144,33 @@ export default class User extends React.Component {
                         var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
                         localStorage.setItem("longitude", longitude.toString());
 
-                        var data = {
-                            uid: userid,
-                            latitude: latitude.toString(),
-                            longitude: longitude.toString()
-                        }
+                        // var data = {
+                        //     uid: userid,
+                        //     latitude: latitude.toString(),
+                        //     longitude: longitude.toString()
+                        // }
 
-                        this.services.senddata('UpdateLocation', data);
+                        // this.services.senddata('UpdateLocation', data);
 
-                        let decryptedData_email = localStorage.getItem('email');
-                        let decryptedData_username = localStorage.getItem('username');
+                        let encrypted_email = localStorage.getItem('email');
+                        let encrypted_username = localStorage.getItem('username');
 
-                        var bytes_email = CryptoJS.AES.decrypt(decryptedData_email.toString(), 'Location-Sharing');
+                        var bytes_email = CryptoJS.AES.decrypt(encrypted_email.toString(), 'Location-Sharing');
                         var email = JSON.parse(bytes_email.toString(CryptoJS.enc.Utf8));
 
-                        var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
+                        var bytes_username = CryptoJS.AES.decrypt(encrypted_username.toString(), 'Location-Sharing');
                         var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
 
-                        var newLocationData = {
+                        var newSocketData = {
                             uid: userid,
                             email: email,
                             username: username,
-                            latitude: latitude.toString(),
-                            longitude: longitude.toString(),
                             status: false,
                             calloption: "no"
                         }
-
-                        console.log("new location:- ", newLocationData);
-
-                        this.services.senddata('Auth', newLocationData);
-
+                        console.log("new location:- ", newSocketData);
+                        this.services.senddata('Auth', newSocketData);
                     }
-
-
                 }, (error) => {
                     console.log("Update Location error:- ", error)
                 })
@@ -214,8 +187,7 @@ export default class User extends React.Component {
     componentDidMount() {
 
         this.auth.authantication();
-        // this.auth.reconnection();
-
+        
         setTimeout(() => {
             map = new window.google.maps.Map(document.getElementById('map'), {
                 zoom: 11
@@ -225,31 +197,24 @@ export default class User extends React.Component {
             this.defaultLocData();
         }, 1000)
 
-        // setTimeout(() => {
-        //     if ($('#markerLayer img').length > 0) {
-        //         console.log("inside data:- ", $('#markerLayer img'));
-        //         $('#markerLayer img').after('<img class="pinimg" style="position: absolute !important;bottom: 0px !important;left: -3px !important;border-radius: unset !important;border: none !important;width: 10px !important;right: 0 !important;margin: auto;height: 6px !important;" src="/img/triangle.png"/>')
-        //     }
-        // }, 2000);
-
-        let decryptedData_code = localStorage.getItem('invitecode');
-        var bytes_code = CryptoJS.AES.decrypt(decryptedData_code.toString(), 'Location-Sharing');
+        let encrypted_code = localStorage.getItem('invitecode');
+        var bytes_code = CryptoJS.AES.decrypt(encrypted_code.toString(), 'Location-Sharing');
         var code = JSON.parse(bytes_code.toString(CryptoJS.enc.Utf8));
 
-        let decryptedData_uid = localStorage.getItem('uid');
-        var bytes_uid = CryptoJS.AES.decrypt(decryptedData_uid.toString(), 'Location-Sharing');
+        let encrypted_uid = localStorage.getItem('uid');
+        var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
         var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
 
         this.setState({
-            sharelink: this.auth.services.domail + code,
             uid: uid
         })
+
+        this.sendLocationData();
 
         this.services.senddata('GetGroupsList', '');
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'GroupList':
-
                     this.setState({
                         groups: res.data
                     })
@@ -260,11 +225,8 @@ export default class User extends React.Component {
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'UserLocationUpdate':
-
                     console.log("live data res:- ", res);
-
                     if (userGroupids.indexOf(res.data.uid) > -1) {
-
                         for (var i = 0; i < markers.length; i++) {
                             markers[i].setMap(null);
                         }
@@ -285,93 +247,156 @@ export default class User extends React.Component {
 
                                     res.data.MemberList.forEach((item, i) => {
 
-                                        // var uluru = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
+                                        // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
 
-                                        let decryptedData_lat = item.latitude;
-                                        var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-                                        var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
+                                        var member_kv = item.latest_kv;
 
-                                        let decryptedData_long = item.longitude;
-                                        var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-                                        var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
+                                        var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+                                        console.log("gkeys in senddata",groupkeys);
 
-                                        var uluru = { lat: parseFloat(lat), lng: parseFloat(long) };
+                                        for(var i=0;i<groupkeys.length;i++){
+                                            var cur_gkey = groupkeys[i].gkey;
 
-                                        console.log("change lat long:- ", uluru);
+                                            var gid = groupkeys[i].gid;
 
-                                        marker = new window.google.maps.Marker({
-                                            position: uluru,
-                                            map: map,
-                                            title: item.username,
-                                            icon: {
-                                                url: (item.profile) ? item.profile : hostprofileurl,
-                                                scaledSize: { width: 50, height: 50 }
-                                            },
-                                            optimized: false
-                                        })
+                                            var grp_kv = groupkeys[i].kv;
+                                            
+                                            if(currentGroupid == gid && member_kv == grp_kv){
+                                                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+                                                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
 
-                                        var content = '<div id="content">' +
-                                            '<h6>' + item.username + '</h6>' +
-                                            '</div>';
-                                        var infowindow = new window.google.maps.InfoWindow();
+                                                var bytes_latitude = CryptoJS.AES.decrypt(item.latitude, decrypted_gkey);
+                                                var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
 
-                                        window.google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-                                            return function () {
+                                                var bytes_longitude = CryptoJS.AES.decrypt(item.longitude, decrypted_gkey);
+                                                var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
-                                                if (lastWindow) lastWindow.close();
+                                                var location_coords = { lat: parseFloat(current_latchar), lng: parseFloat(current_longchar) };
 
-                                                infowindow.setContent(content);
-                                                infowindow.open(map, marker);
-                                                map.setCenter(marker.getPosition());
+                                                console.log("change lat long:- ", location_coords);
 
-                                                lastWindow = infowindow;
-                                            };
-                                        })(marker, content, infowindow));
-
-
-                                        markers.push(marker)
+                                                marker = new window.google.maps.Marker({
+                                                    position: location_coords,
+                                                    map: map,
+                                                    title: item.username,
+                                                    icon: {
+                                                        url: (item.profile) ? item.profile : hostprofileurl,
+                                                        scaledSize: { width: 50, height: 50 }
+                                                    },
+                                                    optimized: false
+                                                })
+        
+                                                var content = '<div id="content">' +
+                                                    '<h6>' + item.username + '</h6>' +
+                                                    '</div>';
+                                                var infowindow = new window.google.maps.InfoWindow();
+                                                window.google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+                                                    return function () {
+        
+                                                        if (lastWindow) lastWindow.close();
+        
+                                                        infowindow.setContent(content);
+                                                        infowindow.open(map, marker);
+                                                        map.setCenter(marker.getPosition());
+        
+                                                        lastWindow = infowindow;
+                                                    };
+                                                })(marker, content, infowindow));
+                                                markers.push(marker)
+                                            }
+                                        }   
                                     })
-
-                                    // setTimeout(() => {
-                                    //     if ($('#markerLayer img').length > 0) {
-                                    //         console.log("inside", $('#markerLayer img'));
-                                    //         $('#markerLayer img').after('<img class="pinimg" style="position: absolute !important;bottom: 0px !important;left: -3px !important;border-radius: unset !important;border: none !important;width: 10px !important;right: 0 !important;margin: auto;height: 6px !important;" src="/img/triangle.png"/>')
-                                    //     }
-                                    // }, 2000)
-
+                                    break;
+                                default:
                                     break;
                             }
                         });
 
                     } else {
                         console.log("not inarray", currentGroupid);
-                        // setTimeout(() => {
-                        //     if ($('#markerLayer img').length > 0) {
-                        //         console.log("inside", $('#markerLayer img'));
-                        //         $('#markerLayer img').after('<img class="pinimg" style="position: absolute !important;bottom: 0px !important;left: -3px !important;border-radius: unset !important;border: none !important;width: 10px !important;right: 0 !important;margin: auto;height: 6px !important;" src="/img/triangle.png"/>')
-                        //     }
-                        // }, 2000)
                     }
-
+                    break;
+                default:
                     break;
             }
         });
 
     }
 
+    sendLocationData(){
+        // ************************ sending location start ***************************** 
+        let encrypted_uid = localStorage.getItem('uid').toString();
+        if (!encrypted_uid) {
+            return false;
+        }
+
+        var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
+        var userid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8)); //decrypted uid
+        
+        var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+        console.log("gkeys in senddata",groupkeys);
+        var data_update = [];
+        // encrypt with gkeys
+        // var groupkeysSize = Object.keys(groupkeys).length;
+        
+        for(var i=0;i<groupkeys.length;i++){
+            var cur_gkey = groupkeys[i].gkey;
+
+            //gkey is encrypted => decrypt gkey 
+            var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+            var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
+            
+            var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid, 'Location-Sharing');
+            var userid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8)); //decrypted uid
+
+            let local_latitude = localStorage.getItem('latitude');
+            var bytes_latitude = CryptoJS.AES.decrypt(local_latitude, 'Location-Sharing');
+            var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
+
+            let local_longitude = localStorage.getItem('longitude');
+            var bytes_longitude = CryptoJS.AES.decrypt(local_longitude.toString(), 'Location-Sharing');
+            var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
+
+            var latitude = CryptoJS.AES.encrypt(JSON.stringify(local_latitude), decrypted_gkey);
+            var longitude = CryptoJS.AES.encrypt(JSON.stringify(local_longitude), decrypted_gkey);
+            
+            // console.log("encryption_gkey",decrypted_gkey);
+            // console.log("curr_lat ",localStorage.getItem('latitude')," encrypted_lat",latitude.toString());
+            // console.log("curr_lng ",localStorage.getItem('longitude')," encrypted_lng",longitude.toString());
+
+            // var bytes_lat = CryptoJS.AES.decrypt(latitude.toString(), decrypted_gkey);
+            // var dec_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
+            // var bytes_long= CryptoJS.AES.decrypt(longitude.toString(), decrypted_gkey);
+            // var dec_lng = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8))
+
+            // console.log("decrypted_lat",dec_lat);
+            // console.log("decrypted_lng",dec_lng);
+
+            var data = {
+                uid: userid,
+                gid: groupkeys[i].gid,
+                latitude: latitude.toString(),
+                longitude: longitude.toString(),
+                kv:groupkeys[i].kv
+            }
+            data_update.push(data);
+        }
+        this.services.senddata('UpdateLocation', data_update);
+    // ************************ sending location complete***************************** 
+    }
+
     // Declare defaultLocData method for set map of default group member location
 
     defaultLocData() {
 
-        let decryptedData_name = localStorage.getItem('username');
-        var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
+        this.sendLocationData();
+
+        let encrypted_name = localStorage.getItem('username');
+        var bytes_name = CryptoJS.AES.decrypt(encrypted_name.toString(), 'Location-Sharing');
         var linkuname = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
-
-
+        
         let modify_name = linkuname.replace(' ', '_');
-        // console.log("username:- ", modify_name);
-
-
+        
         userGroupids = "";
 
         this.services.senddata('GetGroupsList', '');
@@ -407,92 +432,90 @@ export default class User extends React.Component {
 
                                         res.data.MemberList.forEach((items, ii) => {
 
-                                            let decryptedData_lat = items.latitude;
-                                            var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-                                            var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
+                                            console.log("MemberItem: ",items);
+                                            var member_kv = item.latest_kv;
 
-                                            let decryptedData_long = items.longitude;
-                                            var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-                                            var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
+                                            var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+                                            console.log("gkeys",groupkeys);
 
-                                            var uluru = { lat: parseFloat(lat), lng: parseFloat(long) };
+                                            for(var i=0;i<groupkeys.length;i++){
+                                                var cur_gkey = groupkeys[i].gkey;
+                                                var gid = groupkeys[i].gid;
 
-                                            marker = new window.google.maps.Marker({
-                                                position: uluru,
-                                                map: map,
-                                                title: items.username,
-                                                icon: {
-                                                    url: (items.profile) ? items.profile : hostprofileurl,
-                                                    scaledSize: { width: 50, height: 50 }
-                                                },
-                                                optimized: false
-                                            })
+                                                var grp_kv = groupkeys[i].kv;
+                                                
+                                                if(currentGroupid == gid && member_kv == grp_kv){
+                                                    var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+                                                    var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
+                                                    
+                                                    var bytes_latitude = CryptoJS.AES.decrypt(items.latitude, decrypted_gkey);
+                                                    var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
 
-                                            var content = '<div id="content">' +
-                                                '<h6>' + items.username + '</h6>' +
-                                                '</div>';
-                                            var infowindow = new window.google.maps.InfoWindow();
+                                                    var bytes_longitude = CryptoJS.AES.decrypt(items.longitude, decrypted_gkey);
+                                                    var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
-                                            window.google.maps.event.addListener(marker, 'click', ((marker, content, infowindow) => {
-                                                return () => {
+                                                    var location_coords = { lat: parseFloat(current_latchar), lng: parseFloat(current_longchar) };
 
-                                                    if (lastWindow) lastWindow.close();
+                                                    marker = new window.google.maps.Marker({
+                                                        position: location_coords,
+                                                        map: map,
+                                                        title: items.username,
+                                                        icon: {
+                                                            url: (items.profile) ? items.profile : hostprofileurl,
+                                                            scaledSize: { width: 50, height: 50 }
+                                                        },
+                                                        optimized: false
+                                                    })
+        
+                                                    var content = '<div id="content">' +
+                                                        '<h6>' + items.username + '</h6>' +
+                                                        '</div>';
+                                                    var infowindow = new window.google.maps.InfoWindow();
 
-                                                    infowindow.setContent(content);
-                                                    infowindow.open(map, marker);
-                                                    map.setCenter(marker.getPosition());
-
-                                                    lastWindow = infowindow;
-
-                                                };
-                                            })(marker, content, infowindow));
-
-                                            markers.push(marker)
-
-                                            var myoverlay = new window.google.maps.OverlayView();
-                                            myoverlay.draw = function () {
-                                                this.getPanes().markerLayer.id = 'markerLayer';
-                                            };
-                                            myoverlay.setMap(map);
-
+                                                    window.google.maps.event.addListener(marker, 'click', ((marker, content, infowindow) => {
+                                                        return () => {
+        
+                                                            if (lastWindow) lastWindow.close();
+        
+                                                            infowindow.setContent(content);
+                                                            infowindow.open(map, marker);
+                                                            map.setCenter(marker.getPosition());
+        
+                                                            lastWindow = infowindow;
+        
+                                                        };
+                                                    })(marker, content, infowindow));
+        
+                                                    markers.push(marker)
+                                                    var myoverlay = new window.google.maps.OverlayView();
+                                                    myoverlay.draw = function () {
+                                                        this.getPanes().markerLayer.id = 'markerLayer';
+                                                    };
+                                                    myoverlay.setMap(map);
+                                                }
+                                            }
                                         })
-
-                                        break;
+                                    break;
+                                default:
+                                    break;
                                 }
                             });
                         }
                     })
-
-
-
-                    break;
+                break;
+            default:
+                break;
             }
         });
 
     }
 
-    // Declare onChangeShareLink method for set value of sharelink
-
-    onChangeShareLink(e) {
-        this.setState({
-            sharelink: e.target.value
-        });
-    }
-
-    // Declare onChangeInvite method for set calue of invitecode
-
-    onChangeInvite(e) {
-        this.setState({
-            invite: e.target.value
-        });
-    }
-
-    // Declare onChangeGroup method for get and set group wise member location on map
+// Declare onChangeGroup method for get and set group wise member location on map
 
     onChangeGroup(e) {
 
-        let decryptedData_name = localStorage.getItem('username');
-        var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
+        let encrypted_name = localStorage.getItem('username');
+        var bytes_name = CryptoJS.AES.decrypt(encrypted_name.toString(), 'Location-Sharing');
         var linkuname = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
         let modify_name = linkuname.replace(' ', '_');
@@ -536,185 +559,70 @@ export default class User extends React.Component {
 
                         currentGroupid = newgid;
 
-                        // var uluru = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
+                        console.log("MemberItem: ",item);
+                        var member_kv = item.latest_kv;
 
-                        let decryptedData_lat = item.latitude;
-                        var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-                        var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
+                        var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+                        console.log("gkeys",groupkeys);
 
-                        let decryptedData_long = item.longitude;
-                        var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-                        var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
+                        for(var i=0;i<groupkeys.length;i++){
+                            var cur_gkey = groupkeys[i].gkey;
+                            var gid = groupkeys[i].gid;
 
-                        var uluru = { lat: parseFloat(lat), lng: parseFloat(long) };
+                            var grp_kv = groupkeys[i].kv;
+                            
+                            if(currentGroupid == gid && member_kv == grp_kv){
+                                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+                                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
 
-                        marker = new window.google.maps.Marker({
-                            position: uluru,
-                            map: map,
-                            title: item.username,
-                            icon: {
-                                url: (item.profile) ? item.profile : hostprofileurl,
-                                scaledSize: { width: 50, height: 50 }
-                            },
-                            optimized: false
-                        })
+                                var bytes_latitude = CryptoJS.AES.decrypt(item.latitude, decrypted_gkey);
+                                var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
 
-                        var content = '<div id="content">' +
-                            '<h6>' + item.username + '</h6>' +
-                            '</div>';
-                        var infowindow = new window.google.maps.InfoWindow();
+                                var bytes_longitude = CryptoJS.AES.decrypt(item.longitude, decrypted_gkey);
+                                var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
-                        window.google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-                            return function () {
+                                var location_coords = { lat: parseFloat(current_latchar), lng: parseFloat(current_longchar) };
 
-                                if (lastWindow) lastWindow.close();
+                                marker = new window.google.maps.Marker({
+                                    position: location_coords,
+                                    map: map,
+                                    title: item.username,
+                                    icon: {
+                                        url: (item.profile) ? item.profile : hostprofileurl,
+                                        scaledSize: { width: 50, height: 50 }
+                                    },
+                                    optimized: false
+                                })
+        
+                                var content = '<div id="content">' +
+                                    '<h6>' + item.username + '</h6>' +
+                                    '</div>';
+                                var infowindow = new window.google.maps.InfoWindow();
 
-                                infowindow.setContent(content);
-                                infowindow.open(map, marker);
-                                map.setCenter(marker.getPosition());
-
-                                lastWindow = infowindow;
-
-                            };
-                        })(marker, content, infowindow));
-
-
-                        markers.push(marker)
-
-
+                                window.google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
+                                    return function () {
+        
+                                        if (lastWindow) lastWindow.close();
+        
+                                        infowindow.setContent(content);
+                                        infowindow.open(map, marker);
+                                        map.setCenter(marker.getPosition());
+        
+                                        lastWindow = infowindow;
+        
+                                    };
+                                })(marker, content, infowindow));
+        
+        
+                                markers.push(marker)
+                            }
+                        }
                     })
-                    // setTimeout(() => {
-                    //     if ($('#markerLayer img').length > 0) {
-                    //         console.log("inside", $('#markerLayer img'));
-                    //         $('#markerLayer img').after('<img class="pinimg" style="position: absolute !important;bottom: 0px !important;left: -3px !important;border-radius: unset !important;border: none !important;width: 10px !important;right: 0 !important;margin: auto;height: 6px !important;" src="/img/triangle.png"/>')
-                    //     }
-                    // }, 100)
-
+                    break;
+                default:
                     break;
             }
         });
-
-    }
-
-    // Declare onAddDefault method for add member in default group and this added member set location on map
-
-    onAddDefault(e) {
-        e.preventDefault();
-
-        if (this.state.invite == '') {
-            this.setState({
-                errinvite: false
-            });
-            this.state.errinvite = false;
-        } else {
-            this.setState({
-                errinvite: true
-            });
-            this.state.errinvite = true;
-        }
-
-        if (this.state.errinvite == true) {
-
-
-
-            var data = {
-                uid: this.state.uid,
-                GroupId: currentGroupid,
-                InviteCode: this.state.invite
-            };
-
-            this.services.senddata('AddMember', data);
-            this.services.getdata().subscribe((res) => {
-                switch (res.event) {
-                    case 'AddMemebrResp':
-
-                        if (res.data.error) {
-                            alertify.error(res.data.error);
-
-                            this.setState({
-                                invite: ''
-                            });
-                            this.services.offsocket();
-                        } else {
-
-                            this.setState({
-                                invite: ''
-                            });
-
-                            var data = {
-                                uid: this.state.uid,
-                                GroupId: currentGroupid
-                            }
-
-                            this.services.senddata('GetMemeberList', data);
-                            this.services.getdata().subscribe((res) => {
-                                switch (res.event) {
-                                    case 'GroupMemberList':
-
-                                        res.data.MemberList.forEach((item, i) => {
-
-                                            // var uluru = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
-
-                                            let decryptedData_lat = item.latitude;
-                                            var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
-                                            var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
-
-                                            let decryptedData_long = item.longitude;
-                                            var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
-                                            var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
-
-                                            var uluru = { lat: parseFloat(lat), lng: parseFloat(long) };
-
-                                            marker = new window.google.maps.Marker({
-                                                position: uluru,
-                                                map: map,
-                                                title: item.username,
-                                                icon: {
-                                                    url: (item.profile) ? item.profile : hostprofileurl,
-                                                    scaledSize: new window.google.maps.Size(50, 50)
-                                                },
-                                            })
-
-                                            var content = '<div id="content">' +
-                                                '<h6>' + item.username + '</h6>' +
-                                                '</div>';
-                                            var infowindow = new window.google.maps.InfoWindow();
-
-                                            window.google.maps.event.addListener(marker, 'click', (function (marker, content, infowindow) {
-                                                return function () {
-
-                                                    if (lastWindow) lastWindow.close();
-
-                                                    infowindow.setContent(content);
-                                                    infowindow.open(map, marker);
-                                                    map.setCenter(marker.getPosition());
-
-                                                    lastWindow = infowindow;
-                                                };
-                                            })(marker, content, infowindow));
-
-                                            markers.push(marker)
-
-                                            this.services.offsocket();
-                                        })
-
-                                        // setTimeout(() => {
-                                        //     if ($('#markerLayer img').length > 0) {
-                                        //         console.log("inside", $('#markerLayer img'));
-                                        //         $('#markerLayer img').after('<img class="pinimg" style="position: absolute !important;bottom: 0px !important;left: -3px !important;border-radius: unset !important;border: none !important;width: 10px !important;right: 0 !important;margin: auto;height: 6px !important;" src="/img/triangle.png"/>')
-                                        //     }
-                                        // }, 100)
-
-                                        break;
-                                }
-                            });
-                            alertify.success("Add successfully");
-                        }
-                        break;
-                }
-            });
-
-        }
 
     }
 
@@ -793,50 +701,6 @@ export default class User extends React.Component {
 
                         <div className="container-fluid">
 
-                            {/* <div className="row">
-                                <div className="col-xl-12">
-                                    <div className="card shadow mb-4">
-                                        <div className="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                            <h6 className="m-0 font-weight-bold text-primary">Add New User</h6>
-                                        </div>
-                                        <div className="card-body">
-                                            <div className="row">
-                                                <div className="col-xl-3">
-                                                    <form onSubmit={this.onAddDefault}>
-                                                        <label>Invite Friends</label>
-                                                        <div className="input-group">
-                                                            {
-                                                                (this.state.errinvite) ?
-                                                                    <input type="text" className="form-control" value={this.state.invite} onChange={this.onChangeInvite} placeholder="Invite Your Friends" />
-                                                                    :
-                                                                    <input type="text" style={{ border: '1px solid red' }} className="form-control" value={this.state.invite} onChange={this.onChangeInvite} placeholder="Invite Your Friends" />
-                                                            }
-
-                                                            <div className="input-group-append">
-                                                                <button className="btn btn-primary" type="submit">
-                                                                    ADD
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                                <div className="col-xl-5">
-                                                    <label>Share With Your Friends</label>
-                                                    <div className="input-group">
-                                                        <input type="text" value={this.state.sharelink} onChange={this.onChangeShareLink} className="form-control" placeholder="Invite Your Friends" />
-                                                        <div className="input-group-append">
-                                                            <button className="btn btn-success" type="button" onClick={this.copyToClipboard.bind(this, this.state.sharelink)}>
-                                                                Copy Link
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div> */}
-
                             <div className="row">
                                 <div className="col-xl-12">
                                     <div className="card shadow mb-4">
@@ -861,13 +725,6 @@ export default class User extends React.Component {
                                                                         Copy Link
                                                                     </button>
                                                                 </div>
-
-                                                                {/* <div className="input-group" style={{ textAlign: 'right' }}>
-                                                                    <p className="form-control" style={{ background: '#f7f7f7', color: '#212529', border: 'none' }}>Invite link to {this.state.gname}</p>
-                                                                    <button className="btn btn-success" type="button" onClick={this.copyToClipboardForLink.bind(this, this.state.sharetxtlink)}>
-                                                                        Copy Link
-                                                                    </button>
-                                                                </div> */}
                                                             </div>
                                                             <br />
                                                             <div className="col-xl-3 col-xs-12">

@@ -49,6 +49,17 @@ export default class Registration extends Component {
 
     componentDidMount() {
         this.getMyLocation();
+        this.removeLocalstorage();
+
+        var load = localStorage.getItem('load');
+        if (load) {
+            window.location.reload();
+            localStorage.removeItem('load');
+        }
+    }
+
+    componentDidUpdate(prevProps){
+        console.log(`Registration location state updates =>Prev Location ${prevProps.latitude},${prevProps.longitude},New Location ${this.props.latitude},${this.props.longitude}`);
     }
 
     //getMyLocation() to get current latitude and longitude of user
@@ -60,10 +71,24 @@ export default class Registration extends Component {
                     latitude: position.coords.longitude.toString(),
                     longitude: position.coords.latitude.toString(),
                 })
+                console.log("latitude:- ", position.coords.latitude.toString());
+                console.log("longitude:- ", position.coords.longitude.toString());
             }, (error) => {
                 console.log("error from location:- ", error);
             })
         }
+    }
+
+    removeLocalstorage() {
+        localStorage.removeItem("uid");
+        localStorage.removeItem("username");
+        localStorage.removeItem("email");
+        localStorage.removeItem("invitecode");
+        localStorage.removeItem("latitude");
+        localStorage.removeItem("longitude");
+        localStorage.removeItem("flag");
+        localStorage.removeItem("profile");
+
     }
 
     //onChangeUsername() to set value of username
@@ -100,74 +125,104 @@ export default class Registration extends Component {
         firebase.auth().signInWithPopup(provider).then(result => {
             // var token = result.credential.accessToken;
             var user = result.user;
-            console.log("user data:- ", user);
-            
+            console.log(" Google_Login registration user data: ", user);
+
             var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
             localStorage.setItem("latitude", latitude.toString());
 
             var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
             localStorage.setItem("longitude", longitude.toString());
-
+            
             var data = {
                 keyword: "googlelogin",
                 uid: user.uid,
                 email: user.email,
                 username: user.displayName,
-                flage: true,
-                latitude: latitude.toString(),
-                longitude: longitude.toString(),
-                plain_lat: this.state.latitude,
-                plain_long: this.state.longitude,
+                flag: true,
                 profile: (user.photoURL) ? user.photoURL : ""
             }
 
-            this.services.postdata(data).then(res => {
+            this.services.registrationApi(data).then(res => {
                 if (res.data.status) {
                     alertify.success(res.data.message);
 
-                    var uid = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].uid), 'Location-Sharing');
+                    let uid = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].uid), 'Location-Sharing');
                     localStorage.setItem("uid", uid.toString());
 
-                    var email = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].email), 'Location-Sharing');
+                    let email = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].email), 'Location-Sharing');
                     localStorage.setItem("email", email.toString());
 
-                    var username = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].username), 'Location-Sharing');
+                    let username = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].username), 'Location-Sharing');
                     localStorage.setItem("username", username.toString());
 
-                    var invitecode = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].invitecode), 'Location-Sharing');
+                    let invitecode = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].invitecode), 'Location-Sharing');
                     localStorage.setItem("invitecode", invitecode.toString());
 
-                    var flage = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].flage), 'Location-Sharing');
-                    localStorage.setItem("flage", flage.toString());
+                    let flag = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].flag), 'Location-Sharing');
+                    localStorage.setItem("flag", flag.toString());
 
-                    var profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
+                    let profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
                     localStorage.setItem("profile", profile.toString());
 
-                    this.props.history.push('/user');
+                    let getGroupKeyData = {
+                        uid: uid
+                    }
+                    this.services.senddata('getGroupKeys', getGroupKeyData);
+                    this.services.getdata().subscribe((res) =>{
+                        switch (res.event) {
+                            case 'getGroupKeysResponse':
+                                console.log("getGroupkey",res.data);
+                                if(res.data){
+                                    console.log("grpKey_info",res.data);
+                                    localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
+                                    this.props.history.push('/user');
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    });
 
                 } else {
 
                     alertify.success(res.data.message);
 
-                    var uid = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].uid), 'Location-Sharing');
+                    let uid = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].uid), 'Location-Sharing');
                     localStorage.setItem("uid", uid.toString());
 
-                    var email = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].email), 'Location-Sharing');
+                    let email = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].email), 'Location-Sharing');
                     localStorage.setItem("email", email.toString());
 
-                    var username = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].username), 'Location-Sharing');
+                    let username = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].username), 'Location-Sharing');
                     localStorage.setItem("username", username.toString());
 
-                    var invitecode = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].invitecode), 'Location-Sharing');
+                    let invitecode = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].invitecode), 'Location-Sharing');
                     localStorage.setItem("invitecode", invitecode.toString());
 
-                    var flage = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].flage), 'Location-Sharing');
-                    localStorage.setItem("flage", flage.toString());
+                    let flag = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].flag), 'Location-Sharing');
+                    localStorage.setItem("flag", flag.toString());
 
-                    var profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
+                    let profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
                     localStorage.setItem("profile", profile.toString());
 
-                   this.props.history.push('/user');
+                    let getGroupKeyData = {
+                        uid: uid
+                    }
+                    this.services.senddata('getGroupKeys', getGroupKeyData);
+                    this.services.getdata().subscribe((res) =>{
+                        switch (res.event) {
+                            case 'getGroupKeysResponse':
+                                console.log("getGroupkey",res.data);
+                                if(res.data){
+                                    console.log("grpKey_info",res.data);
+                                    localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
+                                    this.props.history.push('/user');
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    });
 
                 }
             });
@@ -184,84 +239,78 @@ export default class Registration extends Component {
     onSubmit(e) {
         e.preventDefault();
 
-        if (this.state.username == '') {
+        if (this.state.username === '') {
             this.setState({
                 errusername: false
             });
-            this.state.errusername = false;
+            // this.state.errusername = false;
         } else {
             this.setState({
                 errusername: true
             });
-            this.state.errusername = true;
+            // this.state.errusername = true;
         }
 
-        if (this.state.email == '') {
+        if (this.state.email === '') {
             this.setState({
                 erremail: false
             });
-            this.state.erremail = false;
+            // this.state.erremail = false;
         } else {
             this.setState({
                 erremail: true
             });
-            this.state.erremail = true;
+            // this.state.erremail = true;
         }
 
-        if (this.state.password == '') {
+        if (this.state.password === '') {
             this.setState({
                 errpass: false
             });
-            this.state.errpass = false;
+            // this.state.errpass = false;
         } else {
             this.setState({
                 errpass: true
             });
-            this.state.errpass = true;
+            // this.state.errpass = true;
         }
 
-        if (this.state.repassword == '') {
+        if (this.state.repassword === '') {
             this.setState({
                 errrepass: false
             });
-            this.state.errrepass = false;
+            // this.state.errrepass = false;
         } else {
 
-            if (this.state.repassword == this.state.password) {
+            if (this.state.repassword === this.state.password) {
                 this.setState({
                     errrepass: true
                 });
-                this.state.errrepass = true;
+                // this.state.errrepass = true;
             } else {
                 this.setState({
                     errrepass: false
                 });
-                this.state.errrepass = false;
+                // this.state.errrepass = false;
             }
         }
 
-        if (this.state.errusername == true && this.state.erremail == true && this.state.errpass == true && this.state.errrepass == true) {
+        if (this.state.errusername === true && this.state.erremail === true && this.state.errpass === true && this.state.errrepass === true) {
             //firebase athentication
             firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then(result => {
                 var user = result.user;
-
-                var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
-                var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
+                console.log(" Email password registration user data: ", user);
 
                 var data = {
                     keyword: "registration",
                     uid: user.uid,
                     email: user.email,
                     username: this.state.username,
-                    flage: false,
-                    latitude: longitude.toString(),
-                    longitude: latitude.toString(),
-                    plain_lat: this.state.longitude,
-                    plain_long: this.state.latitude,
+                    flag: false,
                     profile: (user.photoURL) ? user.photoURL : ""
                 }
 
-                this.services.postdata(data).then(res => {
+                this.services.registrationApi(data).then(res => {
                     if (res.data.status) {
                         alertify.success(res.data.message);
                         this.props.history.push('/');

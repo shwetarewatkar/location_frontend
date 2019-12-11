@@ -1,9 +1,6 @@
 // Import require modules
 
 import React from 'react';
-import Sidebar from '../Common/Sidebar';
-import Navigation from '../Common/Navigation';
-import Footer from '../Common/Footer';
 import Service from '../../Services/service';
 import Auth from '../../Authantication/Auth';
 import alertify from 'alertifyjs';
@@ -66,7 +63,7 @@ export default class Sharelink extends React.Component {
                         var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
                         var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
 
-                        if (username == puname) {
+                        if (username === puname) {
                             this.props.history.push('/');
                         } else {
                             console.log("differ");
@@ -75,6 +72,8 @@ export default class Sharelink extends React.Component {
                         this.props.history.push('/');
                     }
 
+                    break;
+                default:
                     break;
             }
         });
