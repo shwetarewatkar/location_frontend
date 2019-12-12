@@ -88,8 +88,8 @@ export default class Groups extends React.Component {
 
     getAllGroups() {
 
-        let decryptedData_uid = localStorage.getItem('uid');
-        var bytes_uid = CryptoJS.AES.decrypt(decryptedData_uid.toString(), 'Location-Sharing');
+        let encrypted_uid = localStorage.getItem('uid');
+        var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
         var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
 
         this.setState({
@@ -188,16 +188,15 @@ export default class Groups extends React.Component {
     }
 
     // Declare onGroupSubmit method for add new group
-
     onGroupSubmit(e) {
         e.preventDefault();
 
-        let encrypted_lat = localStorage.getItem('latitude');
-        // var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
+        // let encrypted_lat = localStorage.getItem('latitude');
+        // var bytes_lat = CryptoJS.AES.decrypt(encrypted_lat.toString(), 'Location-Sharing');
         // var get_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
 
-        let encrypted_long = localStorage.getItem('longitude');
-        // var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
+        // let encrypted_long = localStorage.getItem('longitude');
+        // var bytes_long = CryptoJS.AES.decrypt(encrypted_long.toString(), 'Location-Sharing');
         // var get_long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
 
         if (this.state.groupname == '') {
@@ -217,8 +216,8 @@ export default class Groups extends React.Component {
             var data = {
                 uid: this.state.uid,
                 GroupName: this.state.groupname,
-                latitude: encrypted_lat,
-                longitude: encrypted_long,
+                // latitude: encrypted_lat,
+                // longitude: encrypted_long,
             }
 
             this.services.senddata('AddGroup', data);
@@ -230,9 +229,16 @@ export default class Groups extends React.Component {
             alertify.success("Add Successfully");
 
             let encrypted_uid = localStorage.getItem('uid');
+            // var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
+            // var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
+
+            // var uid = CryptoJS.AES.encrypt(JSON.stringify(uid), 'Location-Sharing');
+            // localStorage.setItem("uid", uid.toString());
+            
             var getGroupKeyData = {
-                uid: encrypted_uid.toString()
+                uid: encrypted_uid
             }
+
             this.services.senddata('getGroupKeys', getGroupKeyData);
             this.services.getdata().subscribe((res) =>{
                 switch (res.event) {
@@ -303,8 +309,8 @@ export default class Groups extends React.Component {
 
     getsharelink(id, name, shareid) {
 
-        let decryptedData_name = localStorage.getItem('username');
-        var bytes_name = CryptoJS.AES.decrypt(decryptedData_name.toString(), 'Location-Sharing');
+        let encrypted_name = localStorage.getItem('username');
+        var bytes_name = CryptoJS.AES.decrypt(encrypted_name.toString(), 'Location-Sharing');
         var username = JSON.parse(bytes_name.toString(CryptoJS.enc.Utf8));
 
         let modify_name = username.replace(' ', '_');
@@ -401,12 +407,12 @@ export default class Groups extends React.Component {
         //             })
         //             let userArray = []
         //             for (var i = 0; i < res.data.length; i++) {
-        //                 let decryptedData_lat = res.data[i].latitude;
-        //                 var bytes_lat = CryptoJS.AES.decrypt(decryptedData_lat.toString(), 'Location-Sharing');
+        //                 let encrypted_lat = res.data[i].latitude;
+        //                 var bytes_lat = CryptoJS.AES.decrypt(encrypted_lat.toString(), 'Location-Sharing');
         //                 var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8))
 
-        //                 let decryptedData_long = res.data[i].longitude;
-        //                 var bytes_long = CryptoJS.AES.decrypt(decryptedData_long.toString(), 'Location-Sharing');
+        //                 let encrypted_long = res.data[i].longitude;
+        //                 var bytes_long = CryptoJS.AES.decrypt(encrypted_long.toString(), 'Location-Sharing');
         //                 var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
 
         //                 var timestamp = res.data[i].cd;
@@ -689,7 +695,7 @@ export default class Groups extends React.Component {
                                                                         </td>
                                                                         <td>
                                                                             <div className="res-action">
-                                                                                <span className="btn btn-primary btn-hover" onClick={this.getgroupdata.bind(this, obj._id, obj.groupname)} title="Add New Group"><i className="fas fa-plus"></i></span>
+                                                                                {/* <span className="btn btn-primary btn-hover" onClick={this.getgroupdata.bind(this, obj._id, obj.groupname)} title="Add New Group"><i className="fas fa-plus"></i></span> */}
                                                                                 &nbsp;&nbsp;
                                                                                 <span className="btn btn-success btn-hover" onClick={this.getsharelink.bind(this, obj._id, obj.groupname, obj.shareid)} title="Share Link"><i className="fas fa-share"></i></span>
                                                                                 &nbsp;&nbsp;

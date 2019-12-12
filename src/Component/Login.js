@@ -288,10 +288,10 @@ class Login extends Component {
 
                 var user = result.user;
 
-                var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
+                var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
                 localStorage.setItem("latitude", latitude.toString());
 
-                var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
+                var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
                 localStorage.setItem("longitude", longitude.toString());
 
                 var data = {
@@ -310,8 +310,7 @@ class Login extends Component {
                             console.log("Auth_status",res);
                             if (res.data.user_status) {
 
-                                var uid = CryptoJS.AES.encrypt(JSON.stringify(user.uid), 'Location-Sharing');
-                                localStorage.setItem("uid", uid.toString());
+                                
 
                                 var email = CryptoJS.AES.encrypt(JSON.stringify(res.data.user_details.email), 'Location-Sharing');
                                 localStorage.setItem("email", email.toString());
@@ -324,10 +323,14 @@ class Login extends Component {
 
                                 var profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.user_details.profile), 'Location-Sharing');
                                 localStorage.setItem("profile", profile.toString());
-
+                                
+                                var uid = CryptoJS.AES.encrypt(JSON.stringify(user.uid), 'Location-Sharing');
+                                localStorage.setItem("uid", uid.toString());
+                                
                                 var getGroupKeyData = {
                                     uid: uid.toString()
                                 }
+
                                 this.services.senddata('getGroupKeys', getGroupKeyData);
                                 this.services.getdata().subscribe((res) =>{
                                     switch (res.event) {

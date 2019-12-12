@@ -24,7 +24,8 @@ export default class Sharelink extends React.Component {
         this.state = {
             gid: '',
             uname: '',
-            suid: ''
+            suid: '',
+            gname: ''
         }
 
     }
@@ -55,7 +56,8 @@ export default class Sharelink extends React.Component {
                     this.setState({
                         gid: res.data[0]._id,
                         uname: puname,
-                        suid: res.data[0].uid
+                        suid: res.data[0].uid,
+                        gname: res.data[0].groupname
                     })
 
                     let decryptedData_username = localStorage.getItem('username');
@@ -84,14 +86,14 @@ export default class Sharelink extends React.Component {
 
     onAddInGroup() {
 
-        let decryptedData_invitecode = localStorage.getItem('invitecode');
-        var bytes_invitecode = CryptoJS.AES.decrypt(decryptedData_invitecode.toString(), 'Location-Sharing');
-        var invitcode = JSON.parse(bytes_invitecode.toString(CryptoJS.enc.Utf8));
+        // let decryptedData_invitecode = localStorage.getItem('invitecode');
+        // var bytes_invitecode = CryptoJS.AES.decrypt(decryptedData_invitecode.toString(), 'Location-Sharing');
+        // var invitcode = JSON.parse(bytes_invitecode.toString(CryptoJS.enc.Utf8));
 
         var data = {
             uid: this.state.suid,
-            GroupId: this.state.gid,
-            InviteCode: invitcode
+            GroupId: this.state.gid
+            // InviteCode: invitcode
         };
 
         this.services.senddata('AddMember', data);
@@ -118,7 +120,7 @@ export default class Sharelink extends React.Component {
                             <form>
                                 <div className="modal-body">
                                     <p style={{ fontSize: '20px', textAlign: 'center' }}>
-                                        {this.state.uname} send you invite to join '{this.state.uname}' group?
+                                        {this.state.uname} send you invite to join '{this.state.gname}' group?
                                     </p>
                                 </div>
                                 <div style={{ padding: '10px', textAlign: 'center' }}>
