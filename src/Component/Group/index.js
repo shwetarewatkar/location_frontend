@@ -46,7 +46,9 @@ export default class Groups extends React.Component {
             userupdatedata: [],
             shoesharelinkmodel: false,
             sharetxtlink: '',
-            showmap: false
+            showmap: false,
+            longitude: "30",
+            latitude: "-121.00"
         }
 
         this.services = new Service();
@@ -66,7 +68,95 @@ export default class Groups extends React.Component {
         this.onChangeShareTxtLink = this.onChangeShareTxtLink.bind(this);
         this.gethistory = this.gethistory.bind(this);
         this.onCloseMemberHistory = this.onCloseMemberHistory.bind(this);
+        this.sendLocationData = this.sendLocationData.bind(this);
+    }
 
+    sendLocationData() {
+
+        const location = window.navigator && window.navigator.geolocation
+
+        if (location) {
+
+            location.getCurrentPosition((position) => {
+
+                this.setState({
+                    latitude: position.coords.latitude.toString(),
+                    longitude: position.coords.longitude.toString(),
+                })
+                
+                // console.log("new lat, long:- ", this.state.latitude, this.state.longitude);
+                // console.log("current lat, long:- ", current_latchar, current_longchar);
+        // console.log("Send Location!");
+
+            let encrypted_uid = localStorage.getItem('uid');
+            if (!encrypted_uid) {
+                return false;
+            }
+            var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
+            var userid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
+
+            var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
+            localStorage.setItem("latitude", latitude);
+
+            var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
+            localStorage.setItem("longitude", longitude);
+
+        // update location on server
+        // ************************ sending location start *****************************        
+
+            var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+            console.log("gkeys in senddata",groupkeys);
+
+            var data_update = [];
+            // encrypt with gkeys
+            // var groupkeysSize = Object.keys(groupkeys).length;
+            
+            for(var i=0;i<groupkeys.length;i++){
+
+                var cur_gkey = groupkeys[i].gkey;
+
+                //gkey is encrypted => decrypt gkey 
+                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey.toString(),'Location-Sharing');
+                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
+                console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey);
+
+                let local_latitude = localStorage.getItem('latitude');
+                let bytes_latitude = CryptoJS.AES.decrypt(local_latitude.toString(), 'Location-Sharing');
+                let current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
+
+                let local_longitude = localStorage.getItem('longitude');
+                let bytes_longitude = CryptoJS.AES.decrypt(local_longitude, 'Location-Sharing');
+                let current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
+
+                console.log("current_latchar, current_longchar",current_latchar,current_longchar);
+
+                var latitude = CryptoJS.AES.encrypt(JSON.stringify(current_latchar), decrypted_gkey);
+                var longitude = CryptoJS.AES.encrypt(JSON.stringify(current_longchar), decrypted_gkey);
+                console.log("[SEND_LOCATION] encrypted lat, long: ",latitude.toString(), longitude.toString());
+
+                var blatitude = CryptoJS.AES.decrypt(latitude.toString(), decrypted_gkey);
+                var clatchar = JSON.parse(blatitude.toString(CryptoJS.enc.Utf8));
+                
+                var blongitude = CryptoJS.AES.decrypt(longitude.toString(), decrypted_gkey);
+                var clongchar = JSON.parse(blongitude.toString(CryptoJS.enc.Utf8));
+
+                console.log("[SEND_LOCATION] decrypted: ",clatchar,clongchar);
+
+                var data = {
+                    uid: userid,
+                    gid: groupkeys[i].gid,
+                    latitude: latitude.toString(),
+                    longitude: longitude.toString(),
+                    kv:groupkeys[i].kv,
+                    cd: new Date()
+                }
+                data_update.push(data);
+            }
+            this.services.senddata('UpdateLocation', data_update);
+        // ************************ sending location complete*****************************
+            });
+        }
+        
     }
 
     // Declare componentDidMount method for mount some data and methods on load this page
@@ -221,6 +311,44 @@ export default class Groups extends React.Component {
             }
 
             this.services.senddata('AddGroup', data);
+            this.services.getdata().subscribe((res) =>{
+                switch (res.event) {
+                    case 'GroupList':
+                        
+                        if(res.data){
+                            // get new GroupKeys
+
+                            this.services.senddata('getGroupKeys', getGroupKeyData);
+                            this.services.getdata().subscribe((res) =>{
+                                
+                                switch (res.event) {
+                                    case 'getGroupKeysResponse':
+                                        console.log("getGroupkey",res.data);
+                                        
+                                        if(res.data){
+                                            console.log("grpKey_info",res.data);
+                                            localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
+                                            // send location to new and other groups
+                                            this.sendLocationData();
+
+                                            console.log("[AddGroupResp] Location sent to newly created group!")
+
+                                        }
+                                        
+                                        
+                                                                                
+                                        break; 
+                                    default:
+                                        break;
+                                }
+                        });
+
+                                
+                        }
+                }
+            });
+
+            
             this.setState({
                 groupname: '',
                 addnewgroupmodelshow: false
@@ -231,7 +359,7 @@ export default class Groups extends React.Component {
             let encrypted_uid = localStorage.getItem('uid');
             // var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
             // var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
-
+            // console.log("[GROUP]---->> uid: ", uid);
             // var uid = CryptoJS.AES.encrypt(JSON.stringify(uid), 'Location-Sharing');
             // localStorage.setItem("uid", uid.toString());
             
@@ -382,14 +510,45 @@ export default class Groups extends React.Component {
             switch (res.event) {
                 case 'getHistory':
                     var finaldata = this.removeDuplicates(res.data, 'lat');
-
                     console.log("get all location:- ", finaldata);
+                    
+                    finaldata.forEach((item, i) => {
 
-                    this.setState({
-                        userupdatedata: finaldata
+                        // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
+
+                        var member_kv = item.latest_kv;
+                        var currentGroupid = this.state.gid;
+
+                        var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+                        console.log("gkeys in senddata",groupkeys);
+                        let historyData = [];
+                        for(var i=0;i<groupkeys.length;i++){
+                            var cur_gkey = groupkeys[i].gkey;
+
+                            var gid = groupkeys[i].gid;
+
+                            var grp_kv = groupkeys[i].kv;
+                            
+                            if(currentGroupid == gid && member_kv == grp_kv){
+
+                                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+                                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
+
+                                var bytes_latitude = CryptoJS.AES.decrypt(item.latitude, decrypted_gkey);
+                                var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
+
+                                var bytes_longitude = CryptoJS.AES.decrypt(item.longitude, decrypted_gkey);
+                                var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
+
+                                historyData.push({ gid: gid, latest_kv: item.latest_kv, lat: current_latchar, long: current_longchar, cd: item.cd });
+                                
+                            }
+                        }
                     });
-
-                    this.services.offsocket();
+                    
+                    this.setState({
+                        // userupdatedata: historyData
+                    });
 
                     break;
             }

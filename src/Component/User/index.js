@@ -47,19 +47,18 @@ export default class User extends React.Component {
             errinvite: true,
             a: '',
             showMenu: true,
-            latitude: '',
-            longitude: '',
+            latitude: '30.0',
+            longitude: '-121.0',
             gid: '',
             sharetxtlink: '',
             gname: '',
             gfullname: ''
         }
 
-        // this interval set 10 minutes and trace current location of login user
-
+        // this interval set 30 seconds and trace current location of login user
         setInterval(() => {
             this.checkAndSendLocationData();
-        }, 60000)
+        }, 30*1000)
     }
 
     // Declare componentDidMount method for mount some data and methods on load this page
@@ -86,7 +85,6 @@ export default class User extends React.Component {
             uid: uid
         })
 
-        this.sendLocationData();
 
         this.services.senddata('GetGroupsList', '');
 
@@ -96,6 +94,28 @@ export default class User extends React.Component {
                     this.setState({
                         groups: res.data
                     })
+                    break;
+            }
+        });
+
+        var getGroupKeyData = {
+            uid: encrypted_uid
+        }
+
+        this.services.senddata('getGroupKeys', getGroupKeyData);
+        this.services.getdata().subscribe((res) =>{
+            switch (res.event) {
+                case 'getGroupKeysResponse':
+                    console.log("getGroupkey",res.data);
+                    if(res.data){
+                        console.log("grpKey_info",res.data);
+                        localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
+                        // send location to new and other groups
+                        // this.sendLocationData();
+                        
+                    }
+                    break; 
+                default:
                     break;
             }
         });
@@ -284,7 +304,7 @@ export default class User extends React.Component {
                         //gkey is encrypted => decrypt gkey 
                         var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey.toString(),'Location-Sharing');
                         var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
-                        console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey);
+                        console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey," for gid: ",groupkeys[i].gid);
 
                         let local_latitude = localStorage.getItem('latitude');
                         let bytes_latitude = CryptoJS.AES.decrypt(local_latitude.toString(), 'Location-Sharing');
@@ -302,7 +322,8 @@ export default class User extends React.Component {
                             gid: groupkeys[i].gid,
                             latitude: latitude.toString(),
                             longitude: longitude.toString(),
-                            kv:groupkeys[i].kv
+                            kv:groupkeys[i].kv,
+                            cd: new Date(),
                         }
                         data_update.push(data);
                     }
@@ -366,7 +387,7 @@ export default class User extends React.Component {
                 //gkey is encrypted => decrypt gkey 
                 var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey.toString(),'Location-Sharing');
                 var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
-                console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey);
+                console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey," for gid: ",groupkeys[i].gid, " and kv:", groupkeys[i].kv);
 
                 let local_latitude = localStorage.getItem('latitude');
                 let bytes_latitude = CryptoJS.AES.decrypt(local_latitude.toString(), 'Location-Sharing');
@@ -382,21 +403,23 @@ export default class User extends React.Component {
                 var longitude = CryptoJS.AES.encrypt(JSON.stringify(current_longchar), decrypted_gkey);
                 console.log("[SEND_LOCATION] encrypted lat, long: ",latitude.toString(), longitude.toString());
 
-                var blatitude = CryptoJS.AES.decrypt(latitude.toString(), decrypted_gkey);
-                var clatchar = JSON.parse(blatitude.toString(CryptoJS.enc.Utf8));
+                // var blatitude = CryptoJS.AES.decrypt(latitude.toString(), decrypted_gkey);
+                // var clatchar = JSON.parse(blatitude.toString(CryptoJS.enc.Utf8));
                 
-                var blongitude = CryptoJS.AES.decrypt(longitude.toString(), decrypted_gkey);
-                var clongchar = JSON.parse(blongitude.toString(CryptoJS.enc.Utf8));
+                // var blongitude = CryptoJS.AES.decrypt(longitude.toString(), decrypted_gkey);
+                // var clongchar = JSON.parse(blongitude.toString(CryptoJS.enc.Utf8));
 
-                console.log("[SEND_LOCATION] decrypted: ",clatchar,clongchar);
+                // console.log("[SEND_LOCATION] decrypted: ",clatchar,clongchar);
 
                 var data = {
                     uid: userid,
                     gid: groupkeys[i].gid,
                     latitude: latitude.toString(),
                     longitude: longitude.toString(),
-                    kv:groupkeys[i].kv
+                    kv: groupkeys[i].kv,
+                    cd: new Date(),
                 }
+                console.log("[SEND LOCATION] data: ",data);
                 data_update.push(data);
             }
             this.services.senddata('UpdateLocation', data_update);
@@ -457,7 +480,7 @@ export default class User extends React.Component {
                                             var member_kv = items.latest_kv;
 
                                             var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
-                                            console.log("gkeys",groupkeys);
+                                            console.log("[DEFAULT LOC] gkeys from local storage",groupkeys);
 
                                             for(var i=0;i<groupkeys.length;i++){
                                                 var cur_gkey = groupkeys[i].gkey;
@@ -482,7 +505,7 @@ export default class User extends React.Component {
                                                     console.log("[DEFAULT_LOC] cur cords: ", items.longitude.toString(), items.latitude.toString());
                                                     var location_coords = { lat: parseFloat(current_latchar), lng: parseFloat(current_longchar) };
                                                     
-                                                    console.log("[DefaultLoc] Location coords : ",location_coords);
+                                                    // console.log("[DefaultLoc] Location coords : ",location_coords);
 
                                                     marker = new window.google.maps.Marker({
                                                         position: location_coords,
