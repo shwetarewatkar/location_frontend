@@ -482,7 +482,7 @@ export default class Groups extends React.Component {
 
     }
 
-    // Declare getdetail method for get details of lat, long of member on model
+    //Declare getdetail method for get details of lat, long of member on model
 
     getdetail(id) {
 
@@ -511,7 +511,7 @@ export default class Groups extends React.Component {
                 case 'getHistory':
                     var finaldata = this.removeDuplicates(res.data, 'lat');
                     console.log("get all location:- ", finaldata);
-                    
+
                     finaldata.forEach((item, i) => {
 
                         // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
@@ -540,15 +540,17 @@ export default class Groups extends React.Component {
                                 var bytes_longitude = CryptoJS.AES.decrypt(item.longitude, decrypted_gkey);
                                 var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
-                                historyData.push({ gid: gid, latest_kv: item.latest_kv, lat: current_latchar, long: current_longchar, cd: item.cd });
+                                let location = { gid: gid, latest_kv: item.latest_kv, lat: current_latchar, long: current_longchar, cd: item.cd }
+                                console.log("[HISTORY] ", location.latitude,location.longitude);
+                                historyData.push(location);
                                 
                             }
                         }
                     });
                     
-                    this.setState({
-                        // userupdatedata: historyData
-                    });
+                    // this.setState({
+                    //     userupdatedata: historyData
+                    // });
 
                     break;
             }
@@ -595,7 +597,7 @@ export default class Groups extends React.Component {
 
     }
 
-    // Declare onRemoveMember method for open confirmation model of remove member
+    //Declare onRemoveMember method for open confirmation model of remove member
 
     onRemoveMember(rmid) {
 
@@ -758,14 +760,55 @@ export default class Groups extends React.Component {
 
                     console.log("get all location:- ", res.data);
 
-                    var finaldata = this.removeDuplicates(res.data, 'lat');
+                    let finaldata = this.removeDuplicates(res.data, 'lat');
+                    console.log("finaldata",finaldata)
+                    let history = []
+                    finaldata.forEach((item, i) => {
 
+                        // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
+                        console.log("item",item);
+                        var member_kv = item.latest_kv;
+                        let currentGroupid = this.state.gid;
+
+                        var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
+                        console.log("gkeys in senddata",groupkeys);
+                        let historyData = [];
+                        for(var i=0;i<groupkeys.length;i++){
+                            var cur_gkey = groupkeys[i].gkey;
+                            console.log("cur_gkey",cur_gkey);
+                            let gid = groupkeys[i].gid;
+
+                            var grp_kv = groupkeys[i].kv;
+                            console.log("currentGroupid and gid",currentGroupid,gid);
+                            console.log("member_kv & grp_kv",member_kv, grp_kv);
+                            if(currentGroupid == gid && member_kv == grp_kv){
+
+                                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
+                                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
+                                console.log("decrypted_gkey", decrypted_gkey);
+                                console.log("item.latitude",item.lat);
+                                var bytes_latitude = CryptoJS.AES.decrypt(item.lat, decrypted_gkey);
+                                var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
+                                console.log("current latchar",current_latchar);
+
+                                var bytes_longitude = CryptoJS.AES.decrypt(item.lng, decrypted_gkey);
+                                var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
+                                console.log("current longchar",current_longchar);
+
+                                let location = { gid: gid, latest_kv: item.latest_kv, lat: parseFloat(current_latchar), lng: parseFloat(current_longchar), cd: item.cd }
+                                console.log("[HISTORY] ", parseFloat(location.lat),parseFloat(location.long));
+                                console.log("location",location);
+                                history.push(location);
+                                
+                            }
+                        }
+                    });
                     // console.log("newdata:- ", this.removeDuplicates(finaldata, 'lng'));
-
+                    console.log("history",history);
                     var lendata = res.data.length;
 
                     flightPath = new window.google.maps.Polyline({
-                        path: finaldata,
+                        path: history,
                         geodesic: true,
                         strokeColor: '#FF0000',
                         strokeOpacity: 1.0,

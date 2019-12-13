@@ -55,10 +55,10 @@ export default class User extends React.Component {
             gfullname: ''
         }
 
-        // this interval set 30 seconds and trace current location of login user
+        // this interval set 90 seconds and trace current location of login user
         setInterval(() => {
             this.checkAndSendLocationData();
-        }, 30*1000)
+        }, 90*1000)
     }
 
     // Declare componentDidMount method for mount some data and methods on load this page
