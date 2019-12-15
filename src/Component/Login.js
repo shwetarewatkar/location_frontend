@@ -1,24 +1,22 @@
-// Import require modules
-
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
 import firebase from 'firebase';
 import Service from '../Services/service';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
+import { generateKeyPair }from 'crypto';
 
-// Declare globle variables for use this page only
+import AWS from 'aws-sdk';
+
+const s3 = new AWS.S3({apiVersion: '2006-03-01'});
+const BUCKET_NAME = 'location-sharing';
 
 var map,infoWindow;
 
 class Login extends Component {
 
-    // Declare constructor
-
     constructor(props) {
         super(props);
-
-        // Declare state variables, methods, firebase configuration and class objects for use this page
 
         this.services = new Service();
         this.Google_Login = this.Google_Login.bind(this);
@@ -51,10 +49,7 @@ class Login extends Component {
 
     }
 
-    // Declare componentDidMount method for mount some data and methods on load this page
-
     componentDidMount() {
-
         this.getMyLocation();
         this.removeLocalstorage();
 
@@ -68,23 +63,17 @@ class Login extends Component {
         console.log(`Login location state updates =>Prev Location ${prevProps.latitude},${prevProps.longitude},New Location ${this.props.latitude},${this.props.longitude}`);
     }
 
-    // Declare onChangeEmail for set value of email
-
     onChangeEmail(e) {
         this.setState({
             email: e.target.value
         });
     }
 
-    // Declare onChangePassword for set value of password
-
     onChangePassword(e) {
         this.setState({
             password: e.target.value
         });
     }
-
-    // Declare removeLocalstorage for remove all localstorage value
 
     removeLocalstorage() {
         localStorage.removeItem("uid");
@@ -95,10 +84,7 @@ class Login extends Component {
         localStorage.removeItem("longitude");
         localStorage.removeItem("flag");
         localStorage.removeItem("profile");
-
     }
-
-    // Declare handleLocationError method for when any kid of location related error is occur at that time that method handled current location
 
     handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
@@ -108,12 +94,8 @@ class Login extends Component {
         infoWindow.open(map);
     }
 
-    // Declare getMyLocation method for get current latitude and longitude of user
-
     getMyLocation() {
-
         const location = window.navigator && window.navigator.geolocation
-
         if (location) {
             this.setState({ showAlert: false })
             location.getCurrentPosition((position) => {
@@ -130,18 +112,17 @@ class Login extends Component {
             this.setState({ showAlert: true });
             this.handleLocationError(false, infoWindow, map.getCenter());
         }
-
     }
 
-    // Declare Google_Login method for login with google popup open and login
+    randomString = (length, chars)=> {
+        var result = '';
+        for (var i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+        return result;
+    }
 
     Google_Login = () => {
-
         var provider = new firebase.auth.GoogleAuthProvider();
-
         firebase.auth().signInWithPopup(provider).then(result => {
-
-            // var token = result.credential.accessToken;
             var user = result.user;
             console.log("user datat:- ", user);
             
@@ -159,7 +140,6 @@ class Login extends Component {
                 flag: true,
                 profile: (user.photoURL) ? user.photoURL : ""
             }
-
 
             this.services.registrationApi(data).then(res => {
                 if (res.data.status) {
@@ -182,7 +162,7 @@ class Login extends Component {
 
                     var profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
                     localStorage.setItem("profile", profile.toString());
-                    
+
                     var getGroupKeyData = {
                         uid: uid
                     }
@@ -201,9 +181,7 @@ class Login extends Component {
                                 break;
                         }
                     });
-
                 } else {
-
                     alertify.success(res.data.message);
 
                     let uid = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].uid), 'Location-Sharing');
@@ -223,7 +201,7 @@ class Login extends Component {
 
                     let profile = CryptoJS.AES.encrypt(JSON.stringify(res.data.userdata[0].profile), 'Location-Sharing');
                     localStorage.setItem("profile", profile.toString());
-
+                    
                     let getGroupKeyData = {
                         uid: uid
                     }
@@ -244,16 +222,10 @@ class Login extends Component {
                     });
                 }
             });
-
-
         }).catch(error => {
             alertify.error(error.message);
         });
-
-
     }
-
-    // Declare onSubmit method for login using email and password.
 
     onSubmit(e) {
         e.preventDefault();
@@ -262,30 +234,24 @@ class Login extends Component {
             this.setState({
                 erremail: false
             });
-            // this.state.erremail = false;
         } else {
             this.setState({
                 erremail: true
             });
-            // this.state.erremail = true;
         }
 
         if (this.state.password === '') {
             this.setState({
                 errpass: false
             });
-            // this.state.errpass = false;
         } else {
             this.setState({
                 errpass: true
             });
-            // this.state.errpass = true;
         }
 
         if (this.state.erremail === true && this.state.errpass === true) {
-
             firebase.auth().signInWithEmailAndPassword(this.state.email, this.state.password).then(result => {
-
                 var user = result.user;
 
                 var latitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.latitude), 'Location-Sharing');
@@ -294,6 +260,22 @@ class Login extends Component {
                 var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
                 localStorage.setItem("longitude", longitude.toString());
 
+                let sessionid = localStorage.getItem("sessionid");
+                if(!localStorage.getItem("key") && !sessionid){
+                    const randomResult = this.randomString(6, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ');
+                    if(!sessionid){
+                        sessionid = user.uid.toString().concat(randomResult.toString());
+                        console.log("sessionid",sessionid);
+                        localStorage.setItem("sessionId",sessionid);
+                        let session_data = {
+                            sessionid : sessionid
+                    }
+                        this.services.getkeydata(session_data).then(res =>{
+                            // console.log("key",res.data.key);
+                            localStorage.setItem("key",res.data.key);
+                        })
+                    }
+                }
                 var data = {
                     uid: user.uid,
                     email: user.email,
@@ -301,17 +283,12 @@ class Login extends Component {
                     status: true
                 }
 
-                console.log("frontend call:- ", data);
-
                 this.services.senddata('Auth', data);
                 this.services.getdata().subscribe((res) => {
                     switch (res.event) {
                         case 'Auth_Status':
                             console.log("Auth_status",res);
                             if (res.data.user_status) {
-
-                                
-
                                 var email = CryptoJS.AES.encrypt(JSON.stringify(res.data.user_details.email), 'Location-Sharing');
                                 localStorage.setItem("email", email.toString());
 
@@ -350,7 +327,6 @@ class Login extends Component {
                                     }
                                 });
                             }
-
                             break;
                         default:
                             break;
@@ -359,20 +335,12 @@ class Login extends Component {
             }).catch(error => {
                 alertify.error(error.message);
             });
-
         }
-
     }
-
-    // Render HTML page and return it
 
     render() {
         return (
-
             <div className="container">
-
-                {/* This popup is user for when user can not allow location popup in browser at that time display this popup */}
-
                 {
                     this.state.showAlert === true ?
                         <div className="alertNavigator">
@@ -385,15 +353,8 @@ class Login extends Component {
                         :
                         ''
                 }
-
-                {/* END */}
-
-                {/* Login HTML Page */}
-
                 <div className="row justify-content-center">
-
                     <div className="col-xl-10 col-lg-12 col-md-9">
-
                         <div className="card o-hidden border-0 shadow-lg my-5">
                             <div className="card-body p-0">
                                 <div className="row">
@@ -420,7 +381,6 @@ class Login extends Component {
                                                             <input type="password" style={{ border: '1px solid red' }} value={this.state.password} onChange={this.onChangePassword} className="form-control form-control-user" id="exampleInputPassword" placeholder="Password" />
                                                     }
                                                 </div>
-
                                                 <button type="submit" className="btn btn-primary btn-user btn-block" style={{ color: 'white' }}>
                                                     Login
                                                 </button>
@@ -433,32 +393,21 @@ class Login extends Component {
                                                         <Link className="small" to={'/confirm'}>Forgot Password</Link>
                                                     </div>
                                                 </div>
-
                                                 <hr />
                                                 <button onClick={this.Google_Login} type="button" className="btn btn-google btn-user btn-block" style={{ background: '#ea4335', color: 'white' }}>
                                                     <i className="fab fa-google fa-fw"></i> Login with Google
                                                 </button>
-                                                {/* <button type="button" className="btn btn-facebook btn-user btn-block" style={{ background: '#3b5998', color: 'white' }}>
-                                                    <i className="fab fa-facebook-f fa-fw"></i> Login with Facebook
-                                                </button> */}
                                             </form>
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
-
                 </div>
-
-                {/* END */}
-
             </div>
         );
     }
-
 }
 
 export default Login;

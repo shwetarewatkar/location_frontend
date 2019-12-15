@@ -1,20 +1,14 @@
-// Import require modules
-
 import React from 'react';
 import Service from '../../Services/service';
-import Auth from '../../Authantication/Auth';
+import Auth from '../../Authentication/Auth';
 import User from '../User/index';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 
-
 export default class Sharelink extends React.Component {
-
-    // Declare constructor 
 
     constructor(props) {
         super(props);
-
 
         this.services = new Service();
         this.auth = new Auth();
@@ -32,26 +26,17 @@ export default class Sharelink extends React.Component {
             longitude: '',
             latitude: ''
         }
-
     }
 
     sendLocationData() {
-
         const location = window.navigator && window.navigator.geolocation
-
         if (location) {
-
             location.getCurrentPosition((position) => {
-
                 this.setState({
                     latitude: position.coords.latitude.toString(),
                     longitude: position.coords.longitude.toString(),
                 })
                 
-                // console.log("new lat, long:- ", this.state.latitude, this.state.longitude);
-                // console.log("current lat, long:- ", current_latchar, current_longchar);
-        // console.log("Send Location!");
-
             let encrypted_uid = localStorage.getItem('uid');
             if (!encrypted_uid) {
                 return false;
@@ -65,21 +50,15 @@ export default class Sharelink extends React.Component {
             var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
             localStorage.setItem("longitude", longitude);
 
-        // update location on server
-        // ************************ sending location start *****************************        
-
+            // ************************ sending location start *****************************        
             var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
             console.log("gkeys in senddata",groupkeys);
 
             var data_update = [];
-            // encrypt with gkeys
-            // var groupkeysSize = Object.keys(groupkeys).length;
-            
             for(var i=0;i<groupkeys.length;i++){
 
                 var cur_gkey = groupkeys[i].gkey;
 
-                //gkey is encrypted => decrypt gkey 
                 var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey.toString(),'Location-Sharing');
                 var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
                 console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey);
@@ -120,10 +99,7 @@ export default class Sharelink extends React.Component {
         // ************************ sending location complete*****************************
             });
         }
-        
     }
-
-    // Declare componentDidMount method for mount some data and methods on load this page
 
     componentDidMount = () => {
         const location = window.navigator && window.navigator.geolocation
@@ -148,13 +124,11 @@ export default class Sharelink extends React.Component {
             })
         }
 
-        this.auth.authantication();
+        this.auth.Authentication();
         this.auth.reconnection();
-
         let params = (new URL(document.location)).searchParams;
         var modify_name = params.get('name');
         let puname = modify_name.replace('_', ' ');
-
 
         var sdata = {
             shareid: params.get('shareid')
@@ -164,9 +138,7 @@ export default class Sharelink extends React.Component {
         this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
                 case 'getGroupData':
-
                     console.log("get all group data:- ", res.data);
-
                     this.setState({
                         gid: res.data[0]._id,
                         uname: puname,
@@ -178,7 +150,6 @@ export default class Sharelink extends React.Component {
                     if (decryptedData_username) {
                         var bytes_username = CryptoJS.AES.decrypt(decryptedData_username.toString(), 'Location-Sharing');
                         var username = JSON.parse(bytes_username.toString(CryptoJS.enc.Utf8));
-
                         if (username === puname) {
                             this.props.history.push('/');
                         } else {
@@ -187,7 +158,6 @@ export default class Sharelink extends React.Component {
                     } else {
                         this.props.history.push('/');
                     }
-
                     break;
                 default:
                     break;
@@ -200,10 +170,6 @@ export default class Sharelink extends React.Component {
     }
 
     onAddInGroup() {
-
-        // let decryptedData_invitecode = localStorage.getItem('invitecode');
-        // var bytes_invitecode = CryptoJS.AES.decrypt(decryptedData_invitecode.toString(), 'Location-Sharing');
-        // var invitcode = JSON.parse(bytes_invitecode.toString(CryptoJS.enc.Utf8));
         let encrypted_uid = localStorage.getItem('uid');
         var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
         var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
@@ -211,7 +177,6 @@ export default class Sharelink extends React.Component {
         var data = {
             uid: uid,
             GroupId: this.state.gid
-            // InviteCode: invitcode
         };
         
         this.services.senddata('AddMember', data);
@@ -233,9 +198,7 @@ export default class Sharelink extends React.Component {
                                             if(res.data){
                                                 console.log("grpKey_info",res.data);
                                                 localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
-                                                // send location to new and other groups
-                                                this.sendLocationData();
-    
+                                                this.sendLocationData();    
                                                 console.log("[AddMemberResp] Location sent to newly joined group!")
                                                 this.props.history.push('/user');
                                             }
@@ -244,7 +207,6 @@ export default class Sharelink extends React.Component {
                                             break;
                                     }
                             });
-                            
                         }
                         break;
                 }
@@ -282,7 +244,6 @@ export default class Sharelink extends React.Component {
                     <div className="col-xl-4"></div>
                 </div>
             </div>
-
         );
     }
 

@@ -6,13 +6,8 @@ import alertify from 'alertifyjs';
 
 export default class Forgot extends Component {
 
-    // Declare constructor 
-
     constructor(props) {
         super(props);
-
-        // Declare state variables, methods, firebase configuration and class objects for use this page
-
         this.services = new Service();
         this.onChangeEmail = this.onChangeEmail.bind(this);
         this.onSubmit = this.onSubmit.bind(this);
@@ -21,7 +16,6 @@ export default class Forgot extends Component {
             email: '',
             erremail: true
         }
-
 
         var config = {
             apiKey: "AIzaSyAmMZ1vHju7_xZwAwdXpb8NZWB4dyqInbI",
@@ -37,21 +31,15 @@ export default class Forgot extends Component {
 
     }
 
-    // Declare componentDidMount method for mount some data and methods on load this page
-
     componentDidMount() {
         this.removeLocalstorage();
     }
-
-    // Declare onChangeEmail method for set value of email
 
     onChangeEmail(e) {
         this.setState({
             email: e.target.value
         });
     }
-
-    // Declare removeLocalstorage method for remove all localstorage value
 
     removeLocalstorage() {
         localStorage.removeItem("uid");
@@ -63,8 +51,6 @@ export default class Forgot extends Component {
         localStorage.removeItem("gkeys");
     }
 
-    // Declare onSubmit method for send mail confirmation and change password link
-
     onSubmit(e) {
         e.preventDefault();
 
@@ -72,16 +58,13 @@ export default class Forgot extends Component {
             this.setState({
                 erremail: false
             });
-            // this.state.erremail = false;
         } else {
             this.setState({
                 erremail: true
             });
-            // this.state.erremail = true;
         }
 
         if (this.state.erremail === true) {
-
             var data = {
                 uid: "",
                 email: this.state.email
@@ -89,48 +72,31 @@ export default class Forgot extends Component {
 
             this.services.senddata('CheckUserByEmail', data);
             this.services.getdata().subscribe((res) => {
-
                 switch (res.event) {
                     case 'EmailExsists':
-
                         if (res.data.Exists) {
-
                             firebase.auth().sendPasswordResetEmail(this.state.email).then(() => {
-
                                 alertify.success("Check mail! ,Password reset email sent to " + this.state.email);
                                 this.props.history.push('/');
-
                             }).catch(function (error) {
                                 alertify.error(error.message);
                             });
-
                         } else {
                             alertify.error("Email is not exist");
                             this.services.offsocket();
                         }
-
                         break;
                     default:
                         break;
                 }
             });
-
-
-
         }
-
     }
-
-    // Render HTML page and return it
-
     render() {
         return (
             <div className="container">
-
                 <div className="row justify-content-center">
-
                     <div className="col-xl-10 col-lg-12 col-md-9">
-
                         <div className="card o-hidden border-0 shadow-lg my-5">
                             <div className="card-body p-0">
                                 <div className="row">
@@ -158,19 +124,14 @@ export default class Forgot extends Component {
                                                     <Link className="small" to={'/'}>Already have an account? Login!</Link>
                                                 </div>
                                             </form>
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
         );
     }
-
 }

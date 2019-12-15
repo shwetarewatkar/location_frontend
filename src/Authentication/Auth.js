@@ -1,6 +1,4 @@
 
-// Import Require Modules
-
 import React from 'react';
 import Service from '../Services/service';
 import CryptoJS from 'crypto-js';
@@ -12,10 +10,7 @@ export default class Auth extends React.Component {
         this.services = new Service();
     }
 
-    // Authantication Function connect to Socket
     reconnection() {
-        // Get Localstorage Value For Reconnect to Socket
-
         let encrypted_uid = localStorage.getItem('uid');
         let encrypted_email = localStorage.getItem('email');
         let encrypted_username = localStorage.getItem('username');
@@ -37,12 +32,8 @@ export default class Auth extends React.Component {
                 uid: uid,
                 email: email,
                 username: username,
-                // latitude: encrypted_latitude,
-                // longitude: encrypted_longitude,
                 status: false
             }
-
-            // reConnect Socket Event Auth And Get Response on Auth_Status Event
             this.services.reconnect('Auth', data);
             this.services.getdata().subscribe((res) => {
                 switch (res.event) {
@@ -54,23 +45,17 @@ export default class Auth extends React.Component {
             });
 
         } else {
-            // Disconnect Socket If User Removes Localstorage Value
             this.services.disconnect();
 
         }
     }
 
-    // Authantication Function connect to Socket
-    authantication() {
-        // Get Localstorage Value For connect to Socket
+    Authentication() {
         let encrypted_uid = localStorage.getItem('uid');
         let encrypted_email = localStorage.getItem('email');
         let encrypted_username = localStorage.getItem('username');
-        // let encrypted_latitude = localStorage.getItem('latitude');
-        // let encrypted_longitude = localStorage.getItem('longitude');
-
+        
         if (encrypted_uid != null) {
-
             var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
             var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
 
@@ -87,7 +72,6 @@ export default class Auth extends React.Component {
                 status: false
             }
 
-            // Connect Socket Event Auth And Get Response on Auth_Status Event
             this.services.senddata('Auth', data);
             this.services.getdata().subscribe((res) => {
                 switch (res.event) {
@@ -98,7 +82,6 @@ export default class Auth extends React.Component {
                 }
             });
         } else {
-            // Disconnect Socket If User Remove Localstorage Value 
             this.services.disconnect();
 
         }

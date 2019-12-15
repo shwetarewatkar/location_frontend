@@ -90,7 +90,6 @@ export default class Sidebar extends React.Component {
     render() {
         return (
             <ul className="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
-             {/* <ul className={(this.state.showSidebar) ? 'navbar-nav bg-gradient-primary sidebar sidebar-dark' : 'navbar-nav bg-gradient-primary sidebar sidebar-dark collapse'} id="accordionSidebar"> */}
                 <Link className="sidebar-brand d-flex align-items-center justify-content-center" to={'/user'}>
                     <div className="sidebar-brand-icon rotate-n-15">
                         <i className="fas fa-compass"></i>
@@ -109,14 +108,7 @@ export default class Sidebar extends React.Component {
                     </Link>
                 </li>
 
-                {/* <li className={(setpeople) ? 'nav-item active' : 'nav-item'}>
-                    <Link className="nav-link" to={'/people'} onClick={this.Class.bind(this, 'people')}>
-                        <i className="fas fa-user"></i>
-                        <span> People</span>
-                    </Link>
-                </li> */}
-
-                <li className={(setgroup) ? 'nav-item active' : 'nav-item'}>
+               <li className={(setgroup) ? 'nav-item active' : 'nav-item'}>
                     <Link className="nav-link" to={'/groups'} onClick={this.Class.bind(this, 'groups')}>
                         <i className="fas fa-users"></i>
                         <span> Groups</span>

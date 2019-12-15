@@ -1,17 +1,13 @@
-// Import require modules
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../Common/Sidebar';
 import Navigation from '../Common/Navigation';
 import Footer from '../Common/Footer';
 import Service from '../../Services/service';
-import Auth from '../../Authantication/Auth';
+import Auth from '../../Authentication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 import moment from 'moment';
-
-// Declare globle variables to use this page
 
 var map, marker, infoWindow, bounds, flightPath;
 var pos = [];
@@ -19,12 +15,8 @@ var lineData = [];
 
 export default class Groups extends React.Component {
 
-    // Declare constructor 
-
     constructor(props) {
         super(props);
-
-        // Declare state variables, methods and class objects for use this page
 
         this.state = {
             groups: [],
@@ -84,10 +76,6 @@ export default class Groups extends React.Component {
                     longitude: position.coords.longitude.toString(),
                 })
                 
-                // console.log("new lat, long:- ", this.state.latitude, this.state.longitude);
-                // console.log("current lat, long:- ", current_latchar, current_longchar);
-        // console.log("Send Location!");
-
             let encrypted_uid = localStorage.getItem('uid');
             if (!encrypted_uid) {
                 return false;
@@ -101,21 +89,13 @@ export default class Groups extends React.Component {
             var longitude = CryptoJS.AES.encrypt(JSON.stringify(this.state.longitude), 'Location-Sharing');
             localStorage.setItem("longitude", longitude);
 
-        // update location on server
-        // ************************ sending location start *****************************        
-
+            // ************************ sending location start *****************************        
             var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
             console.log("gkeys in senddata",groupkeys);
 
             var data_update = [];
-            // encrypt with gkeys
-            // var groupkeysSize = Object.keys(groupkeys).length;
-            
             for(var i=0;i<groupkeys.length;i++){
-
                 var cur_gkey = groupkeys[i].gkey;
-
-                //gkey is encrypted => decrypt gkey 
                 var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey.toString(),'Location-Sharing');
                 var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
                 console.log("[SEND_LOCATION] decrypted_gkey: ",decrypted_gkey);
@@ -155,14 +135,11 @@ export default class Groups extends React.Component {
             this.services.senddata('UpdateLocation', data_update);
         // ************************ sending location complete*****************************
             });
-        }
-        
+        }    
     }
 
-    // Declare componentDidMount method for mount some data and methods on load this page
-
     componentDidMount() {
-        this.auth.authantication();
+        this.auth.Authentication();
         this.auth.reconnection();
         this.getAllGroups();
         setTimeout(() => {
@@ -174,10 +151,7 @@ export default class Groups extends React.Component {
         }, 1000)
     }
 
-    // Declare getAllGroups method for get all group of user
-
     getAllGroups() {
-
         let encrypted_uid = localStorage.getItem('uid');
         var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
         var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
@@ -186,7 +160,10 @@ export default class Groups extends React.Component {
             uid: uid
         })
 
-        this.services.senddata('GetGroupsList', '');
+        let sessionId = localStorage.getItem('sessionId');
+        let session_data = { 'sessionId':sessionId }
+
+        this.services.senddata('GetGroupsList', session_data);
         this.services.getdata().subscribe((res) => {
             switch (res.event) {
                 case 'GroupList':
@@ -194,13 +171,10 @@ export default class Groups extends React.Component {
                     this.setState({
                         groups: res.data
                     })
-                    break;
+                break;
             }
         });
-
     }
-
-    // Declare onChange event for set value of invitecode
 
     onChangeInviteCode(e) {
         this.setState({
@@ -208,23 +182,17 @@ export default class Groups extends React.Component {
         });
     }
 
-    // Declare onChange event for set value of sharelink
-
     onChangeShareTxtLink(e) {
         this.setState({
             sharetxtlink: e.target.value
         });
     }
 
-    // Declare onChange event for set value of groupname
-
     onChangeGroupName(e) {
         this.setState({
             groupname: e.target.value
         });
     }
-
-    // Declare onJoinSubmit method for add user to our group
 
     onJoinSubmit(e) {
         e.preventDefault();
@@ -240,7 +208,6 @@ export default class Groups extends React.Component {
             });
             this.state.errcode = true;
         }
-
         if (this.state.errcode == true) {
 
             var data = {
@@ -269,25 +236,14 @@ export default class Groups extends React.Component {
                             this.services.offsocket();
                         }
 
-                        break;
+                    break;
                 }
             });
-
         }
-
     }
 
-    // Declare onGroupSubmit method for add new group
     onGroupSubmit(e) {
         e.preventDefault();
-
-        // let encrypted_lat = localStorage.getItem('latitude');
-        // var bytes_lat = CryptoJS.AES.decrypt(encrypted_lat.toString(), 'Location-Sharing');
-        // var get_lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8));
-
-        // let encrypted_long = localStorage.getItem('longitude');
-        // var bytes_long = CryptoJS.AES.decrypt(encrypted_long.toString(), 'Location-Sharing');
-        // var get_long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
 
         if (this.state.groupname == '') {
             this.setState({
@@ -305,50 +261,34 @@ export default class Groups extends React.Component {
 
             var data = {
                 uid: this.state.uid,
-                GroupName: this.state.groupname,
-                // latitude: encrypted_lat,
-                // longitude: encrypted_long,
+                GroupName: this.state.groupname
             }
 
             this.services.senddata('AddGroup', data);
             this.services.getdata().subscribe((res) =>{
                 switch (res.event) {
                     case 'GroupList':
-                        
                         if(res.data){
-                            // get new GroupKeys
-
                             this.services.senddata('getGroupKeys', getGroupKeyData);
-                            this.services.getdata().subscribe((res) =>{
-                                
+                            this.services.getdata().subscribe((res) =>{ 
                                 switch (res.event) {
                                     case 'getGroupKeysResponse':
                                         console.log("getGroupkey",res.data);
-                                        
                                         if(res.data){
                                             console.log("grpKey_info",res.data);
                                             localStorage.setItem("gkeys",JSON.stringify(res.data).toString());
-                                            // send location to new and other groups
                                             this.sendLocationData();
-
-                                            console.log("[AddGroupResp] Location sent to newly created group!")
-
-                                        }
-                                        
-                                        
-                                                                                
+                                            console.log("[AddGroupResp] Location sent to newly created group!");
+                                        }                                
                                         break; 
                                     default:
                                         break;
                                 }
-                        });
-
-                                
+                        });     
                         }
                 }
             });
 
-            
             this.setState({
                 groupname: '',
                 addnewgroupmodelshow: false
@@ -357,12 +297,6 @@ export default class Groups extends React.Component {
             alertify.success("Add Successfully");
 
             let encrypted_uid = localStorage.getItem('uid');
-            // var bytes_uid = CryptoJS.AES.decrypt(encrypted_uid.toString(), 'Location-Sharing');
-            // var uid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
-            // console.log("[GROUP]---->> uid: ", uid);
-            // var uid = CryptoJS.AES.encrypt(JSON.stringify(uid), 'Location-Sharing');
-            // localStorage.setItem("uid", uid.toString());
-            
             var getGroupKeyData = {
                 uid: encrypted_uid
             }
@@ -382,29 +316,18 @@ export default class Groups extends React.Component {
                 }
             });
         }
-
-
     }
 
-    // Declare delgroupdata method for open confirmation model to delete group
-
     delgroupdata(id) {
-
         this.setState({
             gid: id,
             groupdeletemodelshow: true
         })
-
         this.state.groupdeletemodelshow = true;
-
     }
 
-    // Declare onDeleteSubmit method for delete group
-
     onDeleteSubmit(e) {
-
         e.preventDefault();
-
         var data = {
             uid: this.state.uid,
             groupId: this.state.gid
@@ -417,10 +340,7 @@ export default class Groups extends React.Component {
         })
         this.state.groupdeletemodelshow = false;
         alertify.success("Deleted Successfully");
-
     }
-
-    // Declare getgroupdata method for add member in group on model
 
     getgroupdata(id, name) {
         this.setState({
@@ -432,8 +352,6 @@ export default class Groups extends React.Component {
         this.state.groupmodelshow = true;
         console.log("flage for open popup:- ", this.state.groupmodelshow);
     }
-
-    // Declare getsharelink method for invite this group for add user
 
     getsharelink(id, name, shareid) {
 
@@ -451,8 +369,6 @@ export default class Groups extends React.Component {
         })
         this.state.shoesharelinkmodel = true;
     }
-
-    // Declare onGetdata method for list member of group on model
 
     onGetdata(id, name) {
 
@@ -482,8 +398,6 @@ export default class Groups extends React.Component {
 
     }
 
-    //Declare getdetail method for get details of lat, long of member on model
-
     getdetail(id) {
 
         this.setState({
@@ -504,7 +418,6 @@ export default class Groups extends React.Component {
 
         console.log("req for latlong data:- ", data);
 
-
         this.services.senddata('getHistory', data);
         this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
@@ -514,13 +427,10 @@ export default class Groups extends React.Component {
 
                     finaldata.forEach((item, i) => {
 
-                        // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
-
                         var member_kv = item.latest_kv;
                         var currentGroupid = this.state.gid;
 
                         var groupkeys = JSON.parse(localStorage.getItem("gkeys"));
-                        console.log("gkeys in senddata",groupkeys);
                         let historyData = [];
                         for(var i=0;i<groupkeys.length;i++){
                             var cur_gkey = groupkeys[i].gkey;
@@ -530,77 +440,25 @@ export default class Groups extends React.Component {
                             var grp_kv = groupkeys[i].kv;
                             
                             if(currentGroupid == gid && member_kv == grp_kv){
-
-                                var bytes_gkey = CryptoJS.AES.decrypt(cur_gkey,'Location-Sharing');
-                                var decrypted_gkey = JSON.parse(bytes_gkey.toString(CryptoJS.enc.Utf8));
-
                                 var bytes_latitude = CryptoJS.AES.decrypt(item.latitude, decrypted_gkey);
                                 var current_latchar = JSON.parse(bytes_latitude.toString(CryptoJS.enc.Utf8));
 
                                 var bytes_longitude = CryptoJS.AES.decrypt(item.longitude, decrypted_gkey);
                                 var current_longchar = JSON.parse(bytes_longitude.toString(CryptoJS.enc.Utf8));
 
-                                let location = { gid: gid, latest_kv: item.latest_kv, lat: current_latchar, long: current_longchar, cd: item.cd }
+                                let location = { gid: gid, latest_kv: item.latest_kv, 
+                                    lat: current_latchar, long: current_longchar, cd: item.cd }
                                 console.log("[HISTORY] ", location.latitude,location.longitude);
                                 historyData.push(location);
-                                
                             }
                         }
                     });
-                    
-                    // this.setState({
-                    //     userupdatedata: historyData
-                    // });
-
                     break;
             }
         });
-
-        // this.services.senddata('userDetails', data);
-        // this.services.getdata().subscribe((res) => {
-        //     switch (res.event) {
-        //         case 'userDetails':
-
-        //             console.log("response data:- ", res.data);
-
-        //             this.setState({
-        //                 userupdatedata: res.data
-        //             })
-        //             let userArray = []
-        //             for (var i = 0; i < res.data.length; i++) {
-        //                 let encrypted_lat = res.data[i].latitude;
-        //                 var bytes_lat = CryptoJS.AES.decrypt(encrypted_lat.toString(), 'Location-Sharing');
-        //                 var lat = JSON.parse(bytes_lat.toString(CryptoJS.enc.Utf8))
-
-        //                 let encrypted_long = res.data[i].longitude;
-        //                 var bytes_long = CryptoJS.AES.decrypt(encrypted_long.toString(), 'Location-Sharing');
-        //                 var long = JSON.parse(bytes_long.toString(CryptoJS.enc.Utf8));
-
-        //                 var timestamp = res.data[i].cd;
-        //                 let obj = {
-        //                     lat: parseFloat(lat).toFixed(4),
-        //                     long: parseFloat(long).toFixed(4),
-        //                     cd: timestamp
-        //                 }
-        //                 userArray.push(obj)
-        //             }
-
-        //             this.setState({
-        //                 userupdatedata: userArray
-        //             });
-
-        //             console.log("set array:- ", userArray);
-
-        //             break;
-        //     }
-        // });
-
     }
 
-    //Declare onRemoveMember method for open confirmation model of remove member
-
     onRemoveMember(rmid) {
-
         this.setState({
             removegroupmodelshow: true,
             disgmembershow: false,
@@ -612,8 +470,6 @@ export default class Groups extends React.Component {
 
     }
 
-    // Declare onRemoveDeleteSubmit method for remove member from group
-
     onRemoveDeleteSubmit(e) {
         e.preventDefault();
 
@@ -624,25 +480,11 @@ export default class Groups extends React.Component {
             removegroupmodelshow: false
         }
 
-
         this.services.senddata('RemoveMember', data);
         this.state.removegroupmodelshow = false;
         alertify.success("Remove Successfully");
 
-        // this.services.getdata().subscribe((res) => {
-        //     switch (res.event) {
-        //         case 'GroupMemberList':
-        //             this.setState({
-        //                 members: res.data
-        //             })
-        //             break;
-        //     }
-        // });
-
-
     }
-
-    // Declare onAddNewGroup method for open model of add new group
 
     onAddNewGroup() {
         this.setState({
@@ -650,8 +492,6 @@ export default class Groups extends React.Component {
         })
         this.state.addnewgroupmodelshow = true;
     }
-
-    // Declare onCloseModel method for close all model
 
     onCloseModel() {
         this.setState({
@@ -672,16 +512,12 @@ export default class Groups extends React.Component {
         this.state.shoesharelinkmodel = false;
     }
 
-    // Declare onCloseMemberModel method for close member model 
-
     onCloseMemberModel() {
         this.setState({
             disdetail: false
         })
         this.state.disdetail = false;
     }
-
-    // Declare onCloseMemberHistory method for close member model 
 
     onCloseMemberHistory() {
         this.setState({
@@ -690,10 +526,7 @@ export default class Groups extends React.Component {
         this.state.showmap = false;
     }
 
-    // Declare copyToClipboard method for copy share link click on button
-
     copyToClipboard(link) {
-
         var textField = document.createElement('textarea')
         textField.innerText = link
         document.body.appendChild(textField)
@@ -701,10 +534,7 @@ export default class Groups extends React.Component {
         document.execCommand('copy')
         textField.remove()
         alertify.success("Copied!");
-
     }
-
-    // Declare handleLocationError method for when any kid of location related error is occur at that time that method handled current location
 
     handleLocationError(browserHasGeolocation, infoWindow, pos) {
         infoWindow.setPosition(pos);
@@ -714,58 +544,43 @@ export default class Groups extends React.Component {
         infoWindow.open(map);
     }
 
-    // Declare getAllLocations method for set and render map by default when intialize current page
-
     getAllLocations() {
-
         infoWindow = new window.google.maps.InfoWindow();
         if (navigator && navigator.geolocation) {
-
             navigator.geolocation.getCurrentPosition(function (position) {
-
                 pos = [position.coords.latitude, position.coords.longitude]
                 let centerpos = { "lat": position.coords.latitude, "lng": position.coords.longitude }
                 map.setCenter(centerpos);
-
             }, function (error) {
                 console.log("error", error)
                 this.handleLocationError(true, infoWindow, map.getCenter());
             });
         } else {
-            // Browser doesn't support Geolocation
             this.handleLocationError(false, infoWindow, map.getCenter());
         }
     }
 
     gethistory = (uid) => {
-
         this.setState({
             showmap: true
         });
         this.state.showmap = true;
-
         console.log("flag for open model:- ", this.state.showmap);
-
         var data = {
             uid: uid,
             gid: this.state.gid
         };
-
         console.log("send req for get history:- ", data);
 
         this.services.senddata('getHistory', data);
         this.services.getdata().subscribe(async (res) => {
             switch (res.event) {
                 case 'getHistory':
-
                     console.log("get all location:- ", res.data);
-
                     let finaldata = this.removeDuplicates(res.data, 'lat');
                     console.log("finaldata",finaldata)
                     let history = []
                     finaldata.forEach((item, i) => {
-
-                        // var location_coords = { lat: parseFloat(item.latitude), lng: parseFloat(item.longitude) };
                         console.log("item",item);
                         var member_kv = item.latest_kv;
                         let currentGroupid = this.state.gid;
@@ -799,11 +614,9 @@ export default class Groups extends React.Component {
                                 console.log("[HISTORY] ", parseFloat(location.lat),parseFloat(location.long));
                                 console.log("location",location);
                                 history.push(location);
-                                
                             }
                         }
                     });
-                    // console.log("newdata:- ", this.removeDuplicates(finaldata, 'lng'));
                     console.log("history",history);
                     var lendata = res.data.length;
 
@@ -818,7 +631,6 @@ export default class Groups extends React.Component {
                     if (lineData.length === 0) {
                         if (lendata == 0 || lendata == 1) {
                             lineData = [];
-                            // await lineData.setMap(null);
                         } else {
                             lineData = flightPath;
                             console.log("lineData:- ", lineData);
@@ -834,13 +646,10 @@ export default class Groups extends React.Component {
                             lineData.setMap(map);
                         }
                     }
-
                     this.services.offsocket();
-
                     break;
             }
         });
-
     }
 
     removeDuplicates(array, key) {
@@ -851,22 +660,14 @@ export default class Groups extends React.Component {
         )
     }
 
-
-    // Render HTML page and return it
-
     render() {
-
         return (
-
             <div id="wrapper">
                 <Sidebar />
                 <div id="content-wrapper" className="d-flex flex-column">
                     <div id="content">
-
                         <Navigation />
-
                         <div className="container-fluid">
-
                             <div className="row">
                                 <div className="col-xl-12">
                                     <div className="card shadow mb-4">
@@ -887,7 +688,6 @@ export default class Groups extends React.Component {
                                                         </tr>
                                                     </thead>
                                                     <tbody>
-
                                                         {
                                                             this.state.groups.map(function (obj, i) {
                                                                 return (
@@ -920,19 +720,12 @@ export default class Groups extends React.Component {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
-
                     </div>
                     <Footer />
                 </div>
-
-
-                {/* open model for add new member in specific group */}
-
                 <div className={(this.state.groupmodelshow) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmodel" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
-
                         <div className="modal-content">
                             <form onSubmit={this.onJoinSubmit}>
                                 <div className="modal-header">
@@ -942,7 +735,6 @@ export default class Groups extends React.Component {
                                     </button>
                                 </div>
                                 <div className="modal-body">
-
                                     <div className="form-group">
                                         <label>Invite Code</label>
                                         {
@@ -952,7 +744,6 @@ export default class Groups extends React.Component {
                                                 <input type="text" style={{ border: '1px solid red' }} value={this.state.invitecode} onChange={this.onChangeInviteCode} className="form-control" placeholder="Please Enter Invite Code" />
                                         }
                                     </div>
-
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-secondary" onClick={this.onCloseModel} data-dismiss="modal">Close</button>
@@ -966,14 +757,8 @@ export default class Groups extends React.Component {
                 {
                     (this.state.groupmodelshow) ? <div className="modal-backdrop fade show"></div> : ''
                 }
-
-                {/* END */}
-
-                {/* open model for add new member in specific group */}
-
                 <div className={(this.state.shoesharelinkmodel) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmodel" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '1135px' }} role="document">
-
                         <div className="modal-content">
                             <form onSubmit={this.onJoinSubmit}>
                                 <div className="modal-header">
@@ -983,7 +768,6 @@ export default class Groups extends React.Component {
                                     </button>
                                 </div>
                                 <div className="modal-body">
-
                                     <div className="input-group">
                                         <input type="text" value={this.state.sharetxtlink} onChange={this.onChangeShareTxtLink} className="form-control" placeholder="Invite Your Friends" />
                                         <div className="input-group-append">
@@ -992,26 +776,16 @@ export default class Groups extends React.Component {
                                             </button>
                                         </div>
                                     </div>
-
                                 </div>
-
                             </form>
                         </div>
-
                     </div>
                 </div>
-
                 {
                     (this.state.shoesharelinkmodel) ? <div className="modal-backdrop fade show"></div> : ''
                 }
-
-                {/* END */}
-
-                {/* open model for display member of specific group */}
-
                 <div className={(this.state.disgmembershow) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmember" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
-
                         <div className="modal-content">
                             <form onSubmit={this.onSubmit}>
                                 <div className="modal-header">
@@ -1047,15 +821,12 @@ export default class Groups extends React.Component {
                                                                         <i className="fas fa-history"></i>
                                                                     </span>
                                                                 </div>
-
                                                         }
-
                                                     </div>
                                                 </div>
                                             )
                                         }, this)
                                     }
-
                                 </div>
                                 <div className="modal-footer">
                                     <button type="button" className="btn btn-secondary" onClick={this.onCloseModel} data-dismiss="modal">Close</button>
@@ -1068,10 +839,6 @@ export default class Groups extends React.Component {
                 {
                     (this.state.disgmembershow) ? <div className="modal-backdrop fade show"></div> : ''
                 }
-
-                {/* END */}
-
-                {/* open model for member details */}
 
                 <div className={(this.state.disdetail) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmember" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
@@ -1129,10 +896,6 @@ export default class Groups extends React.Component {
                     (this.state.disdetail) ? <div className="modal-backdrop fade show"></div> : ''
                 }
 
-                {/* END */}
-
-                {/* open model for delete confirmation */}
-
                 <div className={(this.state.groupdeletemodelshow) ? 'modal fade show disblock' : 'modal fade disnone'} tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
 
@@ -1159,10 +922,6 @@ export default class Groups extends React.Component {
                 {
                     (this.state.groupdeletemodelshow) ? <div className="modal-backdrop fade show"></div> : ''
                 }
-
-                {/* END */}
-
-                {/* open model for add new group */}
 
                 <div className={(this.state.addnewgroupmodelshow) ? 'modal fade show disblock' : 'modal fade disnone'} id="newgroup" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
@@ -1200,10 +959,6 @@ export default class Groups extends React.Component {
                     (this.state.addnewgroupmodelshow) ? <div className="modal-backdrop fade show"></div> : ''
                 }
 
-                {/* END */}
-
-                {/* open model for delete member confirmation */}
-
                 <div className={(this.state.removegroupmodelshow) ? 'modal fade show disblock' : 'modal fade disnone'} tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document">
 
@@ -1231,10 +986,6 @@ export default class Groups extends React.Component {
                     (this.state.removegroupmodelshow) ? <div className="modal-backdrop fade show"></div> : ''
                 }
 
-                {/* END */}
-
-                {/* open model for show history of user */}
-
                 <div className={(this.state.showmap) ? 'modal fade show disblock' : 'modal fade disnone'} id="groupmodel" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                     <div className="modal-dialog modal-dialog-centered" role="document" style={{ maxWidth: '700px' }}>
 
@@ -1260,8 +1011,6 @@ export default class Groups extends React.Component {
                 {
                     (this.state.showmap) ? <div className="modal-backdrop fade show"></div> : ''
                 }
-
-                {/* END */}
 
             </div>
 

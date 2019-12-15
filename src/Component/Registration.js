@@ -10,7 +10,6 @@ export default class Registration extends Component {
     constructor(props) {
         super(props);
 
-        // state variables, methods, firebase configuration and class objects
         this.services = new Service();
         this.onChangeUsername = this.onChangeUsername.bind(this);
         this.onChangeEmail = this.onChangeEmail.bind(this);
@@ -44,7 +43,6 @@ export default class Registration extends Component {
         if (!firebase.apps.length) {
             firebase.initializeApp(config);
         }
-
     }
 
     componentDidMount() {
@@ -62,7 +60,6 @@ export default class Registration extends Component {
         console.log(`Registration location state updates =>Prev Location ${prevProps.latitude},${prevProps.longitude},New Location ${this.props.latitude},${this.props.longitude}`);
     }
 
-    //getMyLocation() to get current latitude and longitude of user
     getMyLocation() {
         const location = window.navigator && window.navigator.geolocation
         if (location) {
@@ -88,42 +85,35 @@ export default class Registration extends Component {
         localStorage.removeItem("longitude");
         localStorage.removeItem("flag");
         localStorage.removeItem("profile");
-
     }
 
-    //onChangeUsername() to set value of username
     onChangeUsername(e) {
         this.setState({
             username: e.target.value
         });
     }
 
-    //onChangeEmail() to set value of email
     onChangeEmail(e) {
         this.setState({
             email: e.target.value
         });
     }
 
-    //onChangePassword() to set value of password
     onChangePassword(e) {
         this.setState({
             password: e.target.value
         });
     }
 
-    //onChangeRepassword() to set value of repassword
     onChangeRepassword(e) {
         this.setState({
             repassword: e.target.value
         });
     }
 
-    //Google_Login() for login with google popup open and login
     Google_Login = () => {
         var provider = new firebase.auth.GoogleAuthProvider();
         firebase.auth().signInWithPopup(provider).then(result => {
-            // var token = result.credential.accessToken;
             var user = result.user;
             console.log(" Google_Login registration user data: ", user);
 
@@ -167,6 +157,7 @@ export default class Registration extends Component {
                     let getGroupKeyData = {
                         uid: uid
                     }
+
                     this.services.senddata('getGroupKeys', getGroupKeyData);
                     this.services.getdata().subscribe((res) =>{
                         switch (res.event) {
@@ -223,19 +214,13 @@ export default class Registration extends Component {
                                 break;
                         }
                     });
-
                 }
             });
-
-
         }).catch(error => {
             alertify.error(error.message);
         });
-
-
     }
 
-    //onSubmit() to register new user account
     onSubmit(e) {
         e.preventDefault();
 
@@ -243,60 +228,49 @@ export default class Registration extends Component {
             this.setState({
                 errusername: false
             });
-            // this.state.errusername = false;
         } else {
             this.setState({
                 errusername: true
             });
-            // this.state.errusername = true;
         }
 
         if (this.state.email === '') {
             this.setState({
                 erremail: false
             });
-            // this.state.erremail = false;
         } else {
             this.setState({
                 erremail: true
             });
-            // this.state.erremail = true;
         }
 
         if (this.state.password === '') {
             this.setState({
                 errpass: false
             });
-            // this.state.errpass = false;
         } else {
             this.setState({
                 errpass: true
             });
-            // this.state.errpass = true;
         }
 
         if (this.state.repassword === '') {
             this.setState({
                 errrepass: false
             });
-            // this.state.errrepass = false;
         } else {
-
             if (this.state.repassword === this.state.password) {
                 this.setState({
                     errrepass: true
                 });
-                // this.state.errrepass = true;
             } else {
                 this.setState({
                     errrepass: false
                 });
-                // this.state.errrepass = false;
             }
         }
 
         if (this.state.errusername === true && this.state.erremail === true && this.state.errpass === true && this.state.errrepass === true) {
-            //firebase athentication
             firebase.auth().createUserWithEmailAndPassword(this.state.email, this.state.password).then(result => {
                 var user = result.user;
                 console.log(" Email password registration user data: ", user);
@@ -309,7 +283,6 @@ export default class Registration extends Component {
                     flag: false,
                     profile: (user.photoURL) ? user.photoURL : ""
                 }
-
                 this.services.registrationApi(data).then(res => {
                     if (res.data.status) {
                         alertify.success(res.data.message);
@@ -418,5 +391,4 @@ export default class Registration extends Component {
             </div>
         );
     }
-
 }

@@ -5,9 +5,10 @@ import Sidebar from '../Common/Sidebar';
 import Navigation from '../Common/Navigation';
 import Footer from '../Common/Footer';
 import Service from '../../Services/service';
-import Auth from '../../Authantication/Auth';
+import Auth from '../../Authentication/Auth';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
+import crypto from 'crypto';
 
 // Declare globle variables to use this page
 
@@ -65,7 +66,7 @@ export default class User extends React.Component {
 
     componentDidMount() {
 
-        this.auth.authantication();
+        this.auth.Authentication();
         
         setTimeout(() => {
             map = new window.google.maps.Map(document.getElementById('map'), {
@@ -85,8 +86,6 @@ export default class User extends React.Component {
             uid: uid
         })
 
-
-        this.services.senddata('GetGroupsList', '');
 
         this.services.getdata().subscribe((res) => {
             switch (res.event) {

@@ -1,29 +1,21 @@
-// Import require modules
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Sidebar from '../Common/Sidebar';
 import Navigation from '../Common/Navigation';
 import Footer from '../Common/Footer';
 import Service from '../../Services/service';
-import Auth from '../../Authantication/Auth';
+import Auth from '../../Authentication/Auth';
 import firebase from 'firebase';
 import alertify from 'alertifyjs';
 import CryptoJS from 'crypto-js';
 
-
 export default class Setting extends React.Component {
-
-    // Declare constructor 
 
     constructor(props) {
         super(props);
 
-        // Declare state variables, methods, firebase configration and class objects for use this page
-
         this.services = new Service();
         this.auth = new Auth();
-
         this.onSubmit = this.onSubmit.bind(this);
         this.onAccountSubmit = this.onAccountSubmit.bind(this);
         this.onDeleteAccountPop = this.onDeleteAccountPop.bind(this);
@@ -43,14 +35,6 @@ export default class Setting extends React.Component {
             showforgot: false
         }
 
-        // var config = {
-        //     apiKey: "AIzaSyBLE5yO7ozj753lTC22A94OuTsLYvZGnpE",
-        //     authDomain: "location-sharing-31142.firebaseapp.com",
-        //     databaseURL: "https://location-sharing-31142.firebaseio.com",
-        //     projectId: "location-sharing-31142",
-        //     storageBucket: "gs://location-sharing-31142.appspot.com/"
-        // };
-
         var config = {
             apiKey: "AIzaSyAmMZ1vHju7_xZwAwdXpb8NZWB4dyqInbI",
             authDomain: "geoshare-4cb74.firebaseapp.com",
@@ -62,9 +46,7 @@ export default class Setting extends React.Component {
         if (!firebase.apps.length) {
             firebase.initializeApp(config);
         }
-
         let encrypted_flag = localStorage.getItem('flag');
-
         if (encrypted_flag) {
             this.setState({
                 showforgot: true
@@ -76,7 +58,6 @@ export default class Setting extends React.Component {
             })
             this.state.showforgot = false;
         }
-
     }
 
     onChangeEmail(e) {
@@ -99,18 +80,15 @@ export default class Setting extends React.Component {
 
     onSubmit(e) {
         e.preventDefault();
-
         if (this.state.email == '') {
             this.setState({
                 erremail: false
             });
             this.state.erremail = false;
         } else {
-
             let decryptedData_email = localStorage.getItem('email');
             var bytes_email = CryptoJS.AES.decrypt(decryptedData_email.toString(), 'Location-Sharing');
             var localemail = JSON.parse(bytes_email.toString(CryptoJS.enc.Utf8));
-
             if (localemail == this.state.email) {
                 this.setState({
                     erremail: true
@@ -124,45 +102,34 @@ export default class Setting extends React.Component {
                 alertify.error("Entered Email Is Not Exist !");
             }
         }
-
         if (this.state.erremail == true) {
-
             var data = {
                 uid: "",
                 email: this.state.email
             }
-
             this.services.senddata('CheckUserByEmail', data);
             this.services.getdata().subscribe((res) => {
-
                 switch (res.event) {
                     case 'EmailExsists':
-
                         if (res.data.Exists) {
-
                             firebase.auth().sendPasswordResetEmail(this.state.email).then(() => {
-
                                 alertify.success("Check mail! ,Password reset email sent to " + this.state.email);
                                 this.setState({
                                     email: ''
                                 })
                                 this.services.offsocket();
                                 // this.props.history.push('/');
-
                             }).catch(function (error) {
                                 alertify.error(error.message);
                                 this.services.offsocket();
                             });
-
                         } else {
                             alertify.error("Email is not exist");
                             this.services.offsocket();
                         }
-
-                        break;
+                    break;
                 }
             });
-
         }
     }
 
@@ -175,7 +142,6 @@ export default class Setting extends React.Component {
 
     onAccountSubmit(e) {
         e.preventDefault();
-
         let decryptedData_uid = localStorage.getItem('uid');
         var bytes_uid = CryptoJS.AES.decrypt(decryptedData_uid.toString(), 'Location-Sharing');
         var userid = JSON.parse(bytes_uid.toString(CryptoJS.enc.Utf8));
@@ -186,7 +152,6 @@ export default class Setting extends React.Component {
 
         this.services.senddata('DeleteAccount', data);
         this.services.getdata().subscribe((res) => {
-
             switch (res.event) {
                 case 'AccountDeleted':
                     this.props.history.push('/');
@@ -196,10 +161,9 @@ export default class Setting extends React.Component {
                     }).catch(function (error) {
                         console.log(error);
                     });
-                    break;
+                break;
             }
         });
-
     }
 
     onCloseModel() {
@@ -209,19 +173,14 @@ export default class Setting extends React.Component {
         this.state.deletepopupshow = false;
     }
 
-    // Render HTML page and return it
     render() {
         return (
-
             <div id="wrapper">
                 <Sidebar />
                 <div id="content-wrapper" className="d-flex flex-column">
                     <div id="content">
-
                         <Navigation />
-
                         <div className="container-fluid">
-
                             <div className="row">
                                 <div className="col-xl-12">
                                     <div className="card shadow mb-4">
@@ -230,27 +189,20 @@ export default class Setting extends React.Component {
                                         </div>
                                         <div className="card-body">
                                             <nav>
-
                                                 {
                                                     (this.state.showforgot) ?
                                                         <div className="nav nav-tabs" id="nav-tab" role="tablist">
                                                             <a className="nav-item nav-link active" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Account</a>
                                                         </div>
                                                         :
-
                                                         <div className="nav nav-tabs" id="nav-tab" role="tablist">
                                                             <a className="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Change</a>
                                                             <a className="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Account</a>
                                                         </div>
                                                 }
-
-
                                             </nav>
-
-
                                             {
                                                 (this.state.showforgot) ?
-
                                                     <div className="tab-content" id="nav-tabContent">
                                                         <div className="tab-pane fade show active" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
                                                             <div className="col-xl-3">
@@ -261,10 +213,7 @@ export default class Setting extends React.Component {
                                                             </div>
                                                         </div>
                                                     </div>
-
                                                     :
-
-
                                                     <div className="tab-content" id="nav-tabContent">
                                                         <div className="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
                                                             <div className="row">
@@ -300,18 +249,13 @@ export default class Setting extends React.Component {
                                                         </div>
                                                     </div>
                                             }
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        {/* Delete account confirmation model */}
-
                         <div className={(this.state.deletepopupshow) ? 'modal fade show disblock' : 'modal fade disnone'} id="newgroup" tabIndex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
                             <div className="modal-dialog modal-dialog-centered" role="document">
-
                                 <div className="modal-content">
                                     <form onSubmit={this.onAccountSubmit}>
                                         <div className="modal-header">
@@ -335,15 +279,10 @@ export default class Setting extends React.Component {
                         {
                             (this.state.deletepopupshow) ? <div className="modal-backdrop fade show"></div> : ''
                         }
-
                     </div>
-
                     <Footer />
-
                 </div>
             </div>
-
         );
     }
-
 }
